@@ -73,14 +73,9 @@ public class LightVote extends JavaPlugin {
 
    
 
-    public void onEnable() {
-    	PluginDescriptionFile pdfFile = this.getDescription();
-        name = pdfFile.getName();
-        version = pdfFile.getVersion();
-        
-    	log = Logger.getLogger("Minecraft");        
+    public void onEnable() {        
         playerListener = new LVTPlayerListener(this, log);
-        log.info(name + " " + version + " initialized");
+        sM("Initialised");
     	
         
         File folder = new File("plugins" + File.separator + "LightVote");
@@ -90,7 +85,7 @@ public class LightVote extends JavaPlugin {
         
         File configFile = new File(folder.getAbsolutePath() + File.separator +"LightVote.conf");
         if (configFile.exists()){
-        	log.info(name + " " + version + " scanning properties file.");
+        	sM("Scanning properties file.");
         	Scanner sc = null;
         	try {
 				sc = new Scanner(configFile);
@@ -99,7 +94,7 @@ public class LightVote extends JavaPlugin {
 				e.printStackTrace();
 			}
         }else{
-        	log.info(name + " " + version + " creating properties file.");
+        	sM("Creating properties file.");
         	BufferedWriter out = null;
         	try {
 				configFile.createNewFile();
@@ -162,7 +157,7 @@ public class LightVote extends JavaPlugin {
 
         // NOTE: All registered events are automatically unregistered when a plugin is disabled
 
-        System.out.println( name + " version " + version + " disabled." );
+        sM("Disabled");
     }
     public boolean isDebugging(final Player player) {
         if (debugees.containsKey(player)) {
@@ -174,5 +169,11 @@ public class LightVote extends JavaPlugin {
 
     public void setDebugging(final Player player, final boolean value) {
         debugees.put(player, value);
+    }
+
+    public void sM(String message) {
+    	log = Logger.getLogger("Minecraft");
+    	PluginDescriptionFile pdfFile = getDescription();
+    	log.info("[" + pdfFile.getName() + ":" + pdfFile.getVersion() + "] " + message);
     }
 }
