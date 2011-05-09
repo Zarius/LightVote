@@ -1,0 +1,8 @@
+name: LightVote
+main: nl.xupwup.LightVote.LightVote
+version: 1.59
+
+commands:
+    lvt:
+        description: Vote for day or night.
+        usage: /<command>
