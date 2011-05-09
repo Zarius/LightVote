@@ -16,6 +16,9 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.PluginDescriptionFile;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.plugin.PluginManager;
+import org.bukkit.event.Event;
+
 
 /**
  * LightVote for Bukkit
@@ -35,6 +38,7 @@ public class LightVote extends JavaPlugin {
     private double reqYesVotes = 0.05, minAgree = 0.5;
 	private int permaOffset = 4000; 
 	private int voteTime = 30000, voteFailDelay = 30000, votePassDelay = 50000, voteRemindCount = 2;
+	private boolean bedVote = false;
 	private boolean perma = false;
 	private static final String defaultConfig = "# At least 'required-yes-percentage'*peopleOnServer people must vote yes, and there must be more people that voted yes than no" + '\n' + 
 		"required-yes-percentage 5" + '\n' +
@@ -43,6 +47,7 @@ public class LightVote extends JavaPlugin {
 		"vote-pass-delay 50" + '\n' +
 		"vote-time 30" + '\n' +
 		"reminders 2" + '\n' +
+		"bedvote no" + '\n' +
 		"permanent no";
     
     private void parseSettings(Scanner sc){ 
@@ -66,6 +71,8 @@ public class LightVote extends JavaPlugin {
 						voteRemindCount = Integer.parseInt(contents[1]);
 				}else if (contents[0].equals("permanent")){
 						perma = contents[1].equals("yes");
+				}else if (contents[0].equals("bedvote")){
+						bedVote = contents[1].equals("yes");
 				}
 			}
 		}
@@ -77,6 +84,10 @@ public class LightVote extends JavaPlugin {
         playerListener = new LVTPlayerListener(this, log);
         sM("Initialised");
     	
+    	// Register event for beds
+		PluginManager pm = this.getServer().getPluginManager();
+    	pm.registerEvent(Event.Type.PLAYER_BED_ENTER, playerListener, Event.Priority.Normal, this);
+		
         
         File folder = new File("plugins" + File.separator + "LightVote");
         if (!folder.exists()) {
@@ -122,7 +133,7 @@ public class LightVote extends JavaPlugin {
 			}
         }
         
-        playerListener.config(reqYesVotes, minAgree, permaOffset, voteTime, voteFailDelay, votePassDelay, voteRemindCount, perma, voters);
+        playerListener.config(reqYesVotes, minAgree, permaOffset, voteTime, voteFailDelay, votePassDelay, voteRemindCount, perma, voters, bedVote);
 
         if(perma){
         	playerListener.setReset();

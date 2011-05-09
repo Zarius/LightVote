@@ -10,19 +10,21 @@ import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.bukkit.event.player.PlayerBedEnterEvent;
+import org.bukkit.event.player.PlayerListener;
 
 /**
  * Handle events for all Player related events
  * @author XUPWUP
  */
-public class LVTPlayerListener {
+public class LVTPlayerListener extends PlayerListener {
     private final LightVote plugin;
     private Logger log;
 
 	private double reqYesVotes, minAgree;
 	private int permaOffset; 
 	private int voteTime, voteFailDelay, votePassDelay, voteRemindCount;
-	private boolean perma;
+	private boolean perma, bedVote;
 	private static final int nightstart = 14000;
 	private Set<String> canStartVotes = null;
     
@@ -32,7 +34,7 @@ public class LVTPlayerListener {
     }
 	
     
-    public void config(double reqYesVotes, double minAgree, int permaOffset, int voteTime, int voteFailDelay, int votePassDelay, int voteRemindCount, boolean perma, Set<String> set){
+    public void config(double reqYesVotes, double minAgree, int permaOffset, int voteTime, int voteFailDelay, int votePassDelay, int voteRemindCount, boolean perma, Set<String> set, boolean bedVote){
     	this.reqYesVotes = reqYesVotes;
     	this.minAgree = minAgree;
     	this.permaOffset = permaOffset;
@@ -42,6 +44,7 @@ public class LVTPlayerListener {
     	this.voteRemindCount = voteRemindCount;
     	this.perma = perma;
     	canStartVotes = set;
+    	this.bedVote = bedVote;
     }
     
     private int agrees = 0;
@@ -274,5 +277,15 @@ public class LVTPlayerListener {
 			sender.sendMessage(ChatColor.GOLD + "Thanks for voting! (" + (agreed ? "yes" : "no") + ")");
 		}
 		return true;
+	}
+
+	public void onPlayerBedEnter (PlayerBedEnterEvent e)
+	{
+		if (this.bedVote) {
+			Player player = e.getPlayer();
+			String[] commandArgs = {"start"};
+			player.sendMessage(ChatColor.GOLD + "Sleeping, attempting to vote for day time...");
+			onPlayerCommand(player, null, String.valueOf("lvt"), commandArgs);
+		}
 	}
 }
