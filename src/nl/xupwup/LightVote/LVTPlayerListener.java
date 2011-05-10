@@ -108,8 +108,9 @@ public class LVTPlayerListener extends PlayerListener {
 	}	
 	
 	private void endVote(){
-		
+		plugin.sMdebug("Starting endvote...");
 		Player[] playerlist = plugin.getServer().getOnlinePlayers();
+		plugin.sMdebug("Endvote: got players...");
 		String msg = "";
 		boolean passed = false;
 		
@@ -142,6 +143,8 @@ public class LVTPlayerListener extends PlayerListener {
 			log.info("LVT: vote failed, insufficient votes (" + agrees + " yes votes, "+ numplayers + " players, req " + (numplayers * reqYesVotes)+ ")");
 		}
 		
+		plugin.sMdebug("Endvote: checked status, broadcasting message...");
+
 		plugin.getServer().broadcastMessage(ChatColor.GOLD + msg);
 		agrees = 0;
 		voters = new HashSet<Player>();
