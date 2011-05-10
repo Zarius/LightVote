@@ -84,7 +84,9 @@ public class LightVote extends JavaPlugin {
    
 
     public void onEnable() {        
-        playerListener = new LVTPlayerListener(this, log);
+    	log = Logger.getLogger("Minecraft");
+    	
+    	playerListener = new LVTPlayerListener(this, log);
         sM("Initialised");
     	
     	// Register event for beds
@@ -186,7 +188,6 @@ public class LightVote extends JavaPlugin {
     }
 
     public void sM(String message) {
-    	log = Logger.getLogger("Minecraft");
     	PluginDescriptionFile pdfFile = getDescription();
     	log.info("[" + pdfFile.getName() + ":" + pdfFile.getVersion() + "] " + message);
     }
