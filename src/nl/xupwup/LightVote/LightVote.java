@@ -48,7 +48,7 @@ public class LightVote extends JavaPlugin {
 		"vote-pass-delay 50" + '\n' +
 		"vote-time 30" + '\n' +
 		"reminders 2" + '\n' +
-		"bedvote no" + '\n' +
+		"bedvote yes" + '\n' +
 		"permanent no";
     
     private void parseSettings(Scanner sc){ 

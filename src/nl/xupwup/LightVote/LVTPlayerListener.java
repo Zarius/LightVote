@@ -286,7 +286,12 @@ public class LVTPlayerListener extends PlayerListener {
 	{
 		if (this.bedVote) {
 			Player player = e.getPlayer();
-			String[] commandArgs = {"start"};
+			String[] commandArgs = {""};
+			if (!voting) {
+				commandArgs[0]="start";
+			} else {
+				commandArgs[0] = "yes";
+			}
 			player.sendMessage(ChatColor.GOLD + "Sleeping, attempting to vote for day time...");
 			onPlayerCommand(player, null, String.valueOf("lvt"), commandArgs);
 		}
