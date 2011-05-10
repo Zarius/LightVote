@@ -40,6 +40,7 @@ public class LightVote extends JavaPlugin {
 	private int voteTime = 30000, voteFailDelay = 30000, votePassDelay = 50000, voteRemindCount = 2;
 	private boolean bedVote = false;
 	private boolean perma = false;
+	private boolean debugMessages;
 	private static final String defaultConfig = "# At least 'required-yes-percentage'*peopleOnServer people must vote yes, and there must be more people that voted yes than no" + '\n' + 
 		"required-yes-percentage 5" + '\n' +
 	 	"minimum-agree-percentage 50" + '\n' +
@@ -73,6 +74,8 @@ public class LightVote extends JavaPlugin {
 						perma = contents[1].equals("yes");
 				}else if (contents[0].equals("bedvote")){
 						bedVote = contents[1].equals("yes");
+				}else if (contents[0].equals("debug-messages")){
+					debugMessages = contents[1].equals("yes");
 				}
 			}
 		}
@@ -186,5 +189,11 @@ public class LightVote extends JavaPlugin {
     	log = Logger.getLogger("Minecraft");
     	PluginDescriptionFile pdfFile = getDescription();
     	log.info("[" + pdfFile.getName() + ":" + pdfFile.getVersion() + "] " + message);
+    }
+
+    public void sMdebug(String message) {
+    	if (debugMessages) {
+    		sM(message);
+    	}
     }
 }
