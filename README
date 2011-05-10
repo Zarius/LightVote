@@ -3,3 +3,9 @@ Many thanks to xupwup for his original work on this great Craftbukkit plugin.
 Changelog:
 1.62
 Added basic option which allows "sleeping in bed" to trigger a vote for day to start
+1.63
+Bedvote now checks for a vote in progress and votes yes if there is.
+
+TODO:
+Allow a vote style similar to bedvote for voting for daytime
+Multiworld support
