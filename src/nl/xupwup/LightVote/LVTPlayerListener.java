@@ -7,6 +7,7 @@ import java.util.TimerTask;
 import java.util.logging.Logger;
 
 import org.bukkit.ChatColor;
+import org.bukkit.World;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -53,6 +54,7 @@ public class LVTPlayerListener extends PlayerListener {
 	private boolean disabled = false;
 	private boolean voting = false;
 	Timer tReset = null;
+	private World currentWorld = null;
 	
 	private HashSet<Player> voters = new HashSet<Player>();
 	
@@ -119,7 +121,7 @@ public class LVTPlayerListener extends PlayerListener {
 		if (voters.size() > numplayers * reqYesVotes){
 			if (agrees > minAgree * voters.size()) {
 				msg = "Vote passed. (" + agrees + " yes, " + (voters.size() - agrees) + " no)";
-				long currenttime = plugin.getServer().getWorlds().get(0).getTime();
+				long currenttime = currentWorld.getTime();
 				currenttime = currenttime - (currenttime % 24000); // one day lasts 24000
 				
 				if (currenttime < 0){
@@ -130,7 +132,7 @@ public class LVTPlayerListener extends PlayerListener {
 				if (!day) currenttime += nightstart;
 				if(perma) currenttime += permaOffset;
 				
-				plugin.getServer().getWorlds().get(0).setTime(currenttime);
+				currentWorld.setTime(currenttime);
 				passed = true;
 				log.info("LVT: changed time to "+ (day ? "day" : "night"));
 			}
@@ -162,7 +164,15 @@ public class LVTPlayerListener extends PlayerListener {
 	
 	public boolean onPlayerCommand(CommandSender sender, Command command,
     		String label, String[] args){
-		
+
+		Player player = (Player) sender;
+		if (sender instanceof Player) {
+			player = (Player) sender;
+			currentWorld = player.getWorld();
+		} else {
+			plugin.sM("onPlayerCommand - sender is not a player, skipping commands.");
+			return false;
+		}
 		String[] split = args;
 		if (!label.equalsIgnoreCase("lvt")) return false;
 
@@ -182,7 +192,8 @@ public class LVTPlayerListener extends PlayerListener {
 			sender.sendMessage(ChatColor.GOLD + "Lightvote created by XUPWUP");
 			sender.sendMessage(ChatColor.GOLD + "Lightvote version " + plugin.getDescription().getVersion());
 			sender.sendMessage(ChatColor.GOLD + "Static time is " + (perma ? "enabled" : "disabled"));
-			sender.sendMessage(ChatColor.GOLD + "Current time:" + plugin.getServer().getWorlds().get(0).getTime()%24000 );
+			sender.sendMessage(ChatColor.GOLD + "Current time:" + player.getWorld().getTime()%24000 + " ("+player.getWorld().getName()+")");
+			//plugin.getServer().getWorlds().get(0).getTime()%24000 );
 			return true;
 		}
 		
@@ -206,7 +217,7 @@ public class LVTPlayerListener extends PlayerListener {
 				else day = true;
 			}else day = true;
 			
-			long currenttime = plugin.getServer().getWorlds().get(0).getTime();				
+			long currenttime = currentWorld.getTime();				
 			
 			if (isDay(currenttime)){ // it is day now
 				if (day){
@@ -232,7 +243,7 @@ public class LVTPlayerListener extends PlayerListener {
 				agrees++;
 			}else pname = "<CONSOLE>";
 			voting = true;
-			plugin.getServer().broadcastMessage(ChatColor.GOLD + "Lightvote " + daymsg + " started by "+ pname + ",");
+			plugin.getServer().broadcastMessage(ChatColor.GOLD + "Lightvote " + daymsg + " in world '"+currentWorld.getName()+"' started by "+ pname + ",");
 			plugin.getServer().broadcastMessage(ChatColor.GOLD + "type /lvt yes, or /lvt no to vote.");
 			
 			t.schedule(new voteEnd(), voteTime);

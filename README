@@ -5,6 +5,8 @@ Changelog:
 Added basic option which allows "sleeping in bed" to trigger a vote for day to start
 1.63
 Bedvote now checks for a vote in progress and votes yes if there is.
+1.64
+Basic multiworld support for voting (permatime is still just world 0)
 
 TODO:
 Allow a vote style similar to bedvote for voting for daytime
