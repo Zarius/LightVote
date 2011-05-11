@@ -127,7 +127,7 @@ public class LVTPlayerListener extends PlayerListener {
 				
 				if (currenttime < 0){
 					currenttime *= -1;
-					log.info("LVT: Current time was negative!");
+					plugin.sM("LVT: Current time was negative!");
 				}
 				
 				if (!day) currenttime += nightstart;
@@ -135,15 +135,15 @@ public class LVTPlayerListener extends PlayerListener {
 				
 				currentWorld.setTime(currenttime);
 				passed = true;
-				log.info("LVT: changed time to "+ (day ? "day" : "night"));
+				plugin.sM("LVT: changed time to "+ (day ? "day" : "night"));
 			}
 			else {
 				msg = "Vote failed. (" + agrees + " yes, " + (voters.size() - agrees) + " no)";
-				log.info("LVT: vote failed (" + voters.size() + " votes, "+ agrees + " agree)");
+				plugin.sM("LVT: vote failed (" + voters.size() + " votes, "+ agrees + " agree)");
 			}
 		}else{
 			msg = "Vote failed, insufficient \"yes\" votes. (" + agrees + "/" + (numplayers * reqYesVotes) + ")";
-			log.info("LVT: vote failed, insufficient votes (" + agrees + " yes votes, "+ numplayers + " players, req " + (numplayers * reqYesVotes)+ ")");
+			plugin.sM("LVT: vote failed, insufficient votes (" + agrees + " yes votes, "+ numplayers + " players, req " + (numplayers * reqYesVotes)+ ")");
 		}
 		
 		plugin.sMdebug("Endvote: checked status, broadcasting message...");
