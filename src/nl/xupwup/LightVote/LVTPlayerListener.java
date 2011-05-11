@@ -1,5 +1,6 @@
 package nl.xupwup.LightVote;
 
+import java.util.List;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.Timer;
@@ -111,12 +112,12 @@ public class LVTPlayerListener extends PlayerListener {
 	
 	private void endVote(){
 		plugin.sMdebug("Starting endvote...");
-		Player[] playerlist = plugin.getServer().getOnlinePlayers();
+		List<Player> playerlist = currentWorld.getPlayers();
 		plugin.sMdebug("Endvote: got players...");
 		String msg = "";
 		boolean passed = false;
 		
-		int numplayers = playerlist.length;
+		int numplayers = playerlist.size();
 		
 		if (voters.size() > numplayers * reqYesVotes){
 			if (agrees > minAgree * voters.size()) {
@@ -193,7 +194,6 @@ public class LVTPlayerListener extends PlayerListener {
 			sender.sendMessage(ChatColor.GOLD + "Lightvote version " + plugin.getDescription().getVersion());
 			sender.sendMessage(ChatColor.GOLD + "Static time is " + (perma ? "enabled" : "disabled"));
 			sender.sendMessage(ChatColor.GOLD + "Current time:" + player.getWorld().getTime()%24000 + " ("+player.getWorld().getName()+")");
-			//plugin.getServer().getWorlds().get(0).getTime()%24000 );
 			return true;
 		}
 		
@@ -247,7 +247,7 @@ public class LVTPlayerListener extends PlayerListener {
 			plugin.getServer().broadcastMessage(ChatColor.GOLD + "type /lvt yes, or /lvt no to vote.");
 			
 			t.schedule(new voteEnd(), voteTime);
-			if (voters.size() == plugin.getServer().getOnlinePlayers().length){
+			if (voters.size() == currentWorld.getPlayers().size()){
 				t.cancel();
 				t = new Timer();
 				endVote();
@@ -282,7 +282,7 @@ public class LVTPlayerListener extends PlayerListener {
 			}
 			
 			if(sender instanceof Player) voters.add((Player)sender);
-			if (voters.size() == plugin.getServer().getOnlinePlayers().length){
+			if (voters.size() == currentWorld.getPlayers().size()){// plugin.getServer().getOnlinePlayers().length){
 				t.cancel();
 				t = new Timer();
 				reminder.cancel();
