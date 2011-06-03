@@ -11,6 +11,7 @@ import java.util.HashSet;
 import java.util.Scanner;
 import java.util.logging.Logger;
 
+import org.bukkit.Material;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -29,26 +30,49 @@ public class LightVote extends JavaPlugin {
     private LVTPlayerListener playerListener;
     private final HashMap<Player, Boolean> debugees = new HashMap<Player, Boolean>();
 	private Logger log;
-    private String name;
-    private String version;
+	public LVTConfig config;
+	//private String name;
+    //private String version;
     File voteStartersFile;
-    HashSet<String> voters;
+    //HashSet<String> voters;
     
     // default configuration
-    private double reqYesVotes = 0.05, minAgree = 0.5;
-	private int permaOffset = 4000; 
-	private int voteTime = 30000, voteFailDelay = 30000, votePassDelay = 50000, voteRemindCount = 2;
-	private boolean bedVote = false;
-	private boolean perma = false;
-	private boolean debugMessages;
-	private static final String defaultConfig = "# At least 'required-yes-percentage'*peopleOnServer people must vote yes, and there must be more people that voted yes than no" + '\n' + 
-		"required-yes-percentage 5" + '\n' +
-	 	"minimum-agree-percentage 50" + '\n' +
+    //private double reqYesVotes = 0.05, minAgree = 0.5;
+	//private int permaOffset = 4000; 
+	//private int voteTime = 30000, voteFailDelay = 30000, votePassDelay = 50000, voteRemindCount = 2;
+	//private boolean bedVote = false;
+	//private boolean perma = false;
+	//private boolean debugMessages;
+	private static final String defaultConfig = 
+		"# At least 'required-yes-percentage'*peopleOnServer people must vote yes, " +
+		"and there must be more people that voted yes than no" + '\n' + 
+		"# day" + '\n' +
+		"required-yes-percentage-day 5" + '\n' +
+	 	"minimum-agree-percentage-day 50" + '\n' +
+		"# night" + '\n' +
+	 	"required-yes-percentage-night 5" + '\n' +
+	 	"minimum-agree-percentage-night 50" + '\n' +
 		"vote-fail-delay 30" + '\n' +
 		"vote-pass-delay 50" + '\n' +
 		"vote-time 30" + '\n' +
 		"reminders 2" + '\n' +
+		"# enable bedvote (sleeping in a bed starts or agrees with a vote)" + '\n' +
 		"bedvote yes" + '\n' +
+		"# no commands - if this is enabled then all lightvote voting commands are disabled (bedvote or itemvote must be used)" + '\n' +
+		"lightvote-nocommands no" + '\n' +
+		"##### Configure items for commandless voting (hitting 'itemhits' with 'iteminhand' starts/agrees/disagrees with a vote)" + '\n' +
+		"# These are for starting a vote or agreeing to a vote in progress (day and night can be different if you want)" + '\n' +
+		"itemvote yes" + '\n' +
+		"bedvote-iteminhand-day TORCH" + '\n' +
+		"bedvote-itemhits-day BED_BLOCK" + '\n' +
+		"bedvote-iteminhand-night TORCH" + '\n' +
+		"bedvote-itemhits-night BED_BLOCK" + '\n' +
+		"# These are for disagreeing (voting no) with a vote in progress)" + '\n' +
+		"bedvote-novote-iteminhand-day TORCH" + '\n' +
+		"bedvote-novote-itemhits-day DIRT" + '\n' +
+		"bedvote-novote-iteminhand-night TORCH" + '\n' +
+		"bedvote-novote-itemhits-night DIRT" + '\n' +
+		"debug-messages no" + '\n' +
 		"permanent no";
     
     private void parseSettings(Scanner sc){ 
@@ -56,26 +80,53 @@ public class LightVote extends JavaPlugin {
 			String thisline = sc.nextLine();
 			String[] contents = thisline.split(" ");
 			if (contents.length > 1){
-				if (contents[0].equals("minimum-agree-percentage")){
-						minAgree = Integer.parseInt(contents[1]);
-						minAgree /= 100;
-				}else if (contents[0].equals("required-yes-percentage")){
-						reqYesVotes = Integer.parseInt(contents[1]);
-						reqYesVotes /= 100;
+				if (contents[0].equals("minimum-agree-percentage-day")){
+						config.minAgreeDay = Integer.parseInt(contents[1]);
+						config.minAgreeDay /= 100;
+				}else if (contents[0].equals("required-yes-percentage-day")){
+					config.reqYesVotesDay = Integer.parseInt(contents[1]);
+					config.reqYesVotesDay /= 100;
+				}else if (contents[0].equals("minimum-agree-percentage-night")){
+						config.minAgreeNight = Integer.parseInt(contents[1]);
+						config.minAgreeNight /= 100;
+				}else if (contents[0].equals("required-yes-percentage-night")){
+					config.reqYesVotesNight = Integer.parseInt(contents[1]);
+					config.reqYesVotesNight /= 100;
 				}else if (contents[0].equals("vote-fail-delay")){
-						voteFailDelay = Integer.parseInt(contents[1]) * 1000;
+					config.voteFailDelay = Integer.parseInt(contents[1]) * 1000;
 				}else if (contents[0].equals("vote-pass-delay")){
-						votePassDelay = Integer.parseInt(contents[1]) * 1000;
+					config.votePassDelay = Integer.parseInt(contents[1]) * 1000;
 				}else if (contents[0].equals("vote-time")){
-						voteTime = Integer.parseInt(contents[1]) * 1000;
+					config.voteTime = Integer.parseInt(contents[1]) * 1000;
 				}else if (contents[0].equals("reminders")){
-						voteRemindCount = Integer.parseInt(contents[1]);
+					config.voteRemindCount = Integer.parseInt(contents[1]);
 				}else if (contents[0].equals("permanent")){
-						perma = contents[1].equals("yes");
+					config.perma = contents[1].equals("yes");
 				}else if (contents[0].equals("bedvote")){
-						bedVote = contents[1].equals("yes");
+					config.bedVote = contents[1].equals("yes");
+				}else if (contents[0].equals("itemvote")){
+					config.itemVote = contents[1].equals("yes");
+				}else if (contents[0].equals("lightvote-nocommands")){
+					config.lightVoteNoCommands = contents[1].equals("yes");
+				}else if (contents[0].equals("bedvote-iteminhand-day")){
+					config.bedVoteItemInHandDay = Material.getMaterial(contents[1]);
+				}else if (contents[0].equals("bedvote-itemhits-day")){
+					config.bedVoteItemHitsDay = Material.getMaterial(contents[1]);
+				}else if (contents[0].equals("bedvote-iteminhand-night")){
+					config.bedVoteItemInHandNight = Material.getMaterial(contents[1]);
+				}else if (contents[0].equals("bedvote-itemhits-night")){
+					config.bedVoteItemHitsNight = Material.getMaterial(contents[1]);
+
+				}else if (contents[0].equals("bedvote-novote-iteminhand-day")){
+					config.bedVoteNoVoteItemInHandDay = Material.getMaterial(contents[1]);
+				}else if (contents[0].equals("bedvote-novote-itemhits-day")){
+					config.bedVoteNoVoteItemHitsDay = Material.getMaterial(contents[1]);
+				}else if (contents[0].equals("bedvote-novote-iteminhand-night")){
+					config.bedVoteNoVoteItemInHandNight = Material.getMaterial(contents[1]);
+				}else if (contents[0].equals("bedvote-novote-itemhits-night")){
+					config.bedVoteNoVoteItemHitsNight = Material.getMaterial(contents[1]);
 				}else if (contents[0].equals("debug-messages")){
-					debugMessages = contents[1].equals("yes");
+					config.debugMessages = contents[1].equals("yes");
 				}
 			}
 		}
@@ -85,13 +136,14 @@ public class LightVote extends JavaPlugin {
 
     public void onEnable() {        
     	log = Logger.getLogger("Minecraft");
-    	
+    	config = new LVTConfig();
     	playerListener = new LVTPlayerListener(this, log);
         sM("Initialised");
     	
     	// Register event for beds
 		PluginManager pm = this.getServer().getPluginManager();
     	pm.registerEvent(Event.Type.PLAYER_BED_ENTER, playerListener, Event.Priority.Normal, this);
+    	pm.registerEvent(Event.Type.PLAYER_INTERACT, playerListener, Event.Priority.Normal, this);
 		
         
         File folder = new File("plugins" + File.separator + "LightVote");
@@ -121,6 +173,7 @@ public class LightVote extends JavaPlugin {
 				e.printStackTrace();
 			}
         }
+        sM("Properties loaded.  Debug messages: " +config.debugMessages);
         
         voteStartersFile = new File(folder.getAbsolutePath() + File.separator +"voteStarters.conf");
         if(voteStartersFile.exists()){
@@ -132,15 +185,16 @@ public class LightVote extends JavaPlugin {
 				out = new BufferedWriter(new FileWriter(voteStartersFile));
 				out.write("*");
 				out.close();
-				voters = null;
+				config.canStartVotes = null;
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
         }
         
-        playerListener.config(reqYesVotes, minAgree, permaOffset, voteTime, voteFailDelay, votePassDelay, voteRemindCount, perma, voters, bedVote);
+        //playerListener.config(config, voters);
+        //reqYesVotes, minAgree, permaOffset, voteTime, voteFailDelay, votePassDelay, voteRemindCount, perma, voters, bedVote);
 
-        if(perma){
+        if(config.perma){
         	playerListener.setReset();
         }
     }
@@ -148,14 +202,14 @@ public class LightVote extends JavaPlugin {
     private void updateVoters(File f){
     	try {
 			Scanner sc = new Scanner(f);
-			voters = new HashSet<String>();
+			config.canStartVotes = new HashSet<String>();
 			while(sc.hasNext()){
 				String name = sc.next();
 				if (name.equals("*")){
-					voters = null;
+					config.canStartVotes = null;
 					return;
 				}
-				voters.add(name.toLowerCase());
+				config.canStartVotes.add(name.toLowerCase());
 			}
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
@@ -193,7 +247,7 @@ public class LightVote extends JavaPlugin {
     }
 
     public void sMdebug(String message) {
-    	if (debugMessages) {
+    	if (config.debugMessages) {
     		sM(message);
     	}
     }

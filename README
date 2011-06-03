@@ -9,6 +9,18 @@ Bedvote now checks for a vote in progress and votes yes if there is.
 Basic multiworld support for voting (permatime is still just world 0)
 1.65
 Multiworld support now only counts people in the current world as relevant for a vote
+1.66
+Added itemVote (hit item X with item Y in hand to vote yes/no for day/night)
+Added lightvote-nocommands (disables /lvt start and /lvt yes/no to use only itemVote or bedVote)
+
+Version 1.67
+* Vote message should be sent only to applicable world
+* Fixed vote start message to advise /lvt help when using lightvote-nocommands
+* Fixed count error in yes/no vote count
+
+Version 1.68
+* Added option to disable itemVote.
+* Fixed bug where players could change day vote to night vote.
 
 TODO:
 Allow a vote style similar to bedvote for voting for daytime
