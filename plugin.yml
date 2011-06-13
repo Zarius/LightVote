@@ -1,5 +1,5 @@
 name: LightVote
-main: nl.xupwup.LightVote.LightVote
+main: com.gmail.zariust.LightVote.LightVote
 version: 1.68
 authors:
   - xupwup

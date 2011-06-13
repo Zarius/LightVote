@@ -1,4 +1,4 @@
-package nl.xupwup.LightVote;
+package com.gmail.zariust.LightVote;
 
 import java.util.HashSet;
 //import java.util.Set;

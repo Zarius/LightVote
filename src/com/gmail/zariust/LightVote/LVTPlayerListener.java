@@ -1,4 +1,4 @@
-package nl.xupwup.LightVote;
+package com.gmail.zariust.LightVote;
 
 import java.util.List;
 import java.util.HashSet;
@@ -430,11 +430,11 @@ public class LVTPlayerListener extends PlayerListener {
 					if (e.getItem() != null) {
 						plugin.sMdebug("Bedvote interaction detected 'novote'... item held: "+e.getItem().getType().name()+" item needed: "+noVoteItemInHand.name());
 						if (e.getItem().getType() == noVoteItemInHand) {
-							//if (!voting) {
+							if (voting) {
 								//startVote(!(isDay(currenttime)), player);
 							//} else {
 								addToVote(!(isDay(currenttime)), player, false);
-							//}
+							}
 						}
 					}
 				}
