@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<project name="LightVote" basedir="." default="build">
+	<property name="lib" location="lib"/>
+	<property name="src" location="src"/>
+	
+	<!--
+	Include Ant-Contrib tasks
+	See: http://ant-contrib.sourceforge.net/tasks/tasks/
+	-->
+	<taskdef resource="net/sf/antcontrib/antlib.xml">
+		<classpath>
+			<pathelement location="${lib}/ant-contrib-1.0b3.jar"/>
+		</classpath>
+	</taskdef>
+	
+	<loadfile srcFile="${src}/plugin.yml" property="plugin.version">
+		<filterchain>
+			<linecontainsregexp>
+				<regexp pattern="^version:\s*.*$"/>
+			</linecontainsregexp>
+			<tokenfilter>
+				<replaceregex pattern="^version:\s*(.*)$" replace="\1"/>
+			</tokenfilter>
+			<striplinebreaks/>
+		</filterchain>
+	</loadfile>
+	
+	<!--
+	Find latest Bukkit jar in lib directory
+	You may manually override this property by setting lib.bukkit.version
+	on the command line using the -D switch, e.g.:
+	
+	$ ant -Dlib.bukkit.version="0.0.1-r746" build
+	-->
+	<last id="lib.bukkit.jar">
+		<sort>
+			<fileset dir="${lib}" includes="bukkit-*.jar" />
+		</sort>
+	</last>
+	<property name="lib.bukkit.jar" refid="lib.bukkit.jar"/>
+	<propertyregex property="lib.bukkit.version" input="${lib.bukkit.jar}" regexp="([\d\.]+-r\d+)\.jar$" select="\1"/>
+	<property name="lib.bukkit" location="${lib}/bukkit-${lib.bukkit.version}.jar"/>
+	
+	<property name="logblock-location" value="dependencies/LogBlock.jar"/>
+	<property name="permissions-location" value="dependencies/Permissions.jar"/>
+	
+	<property name="boseconomy-location" value="dependencies/EconomyRegister/BOSEconomy.jar"/>
+	<property name="essentials-location" value="dependencies/EconomyRegister/Essentials.jar"/>
+	<property name="ico4-location" value="dependencies/EconomyRegister/iCo4.jar"/>
+	<property name="ico5-location" value="dependencies/EconomyRegister/iCo5.jar"/>
+	
+	<property name="output-jar" value="${ant.project.name}.jar"/>
+	<property name="export-dir" value="/home/zarius/Games/Minecraft/Servers/ifami.test.igrow/plugins/"/>
+	
+	<property name="debuglevel" value="source,lines"/>
+	
+	<path id="classpath">
+		<pathelement location="bin"/>
+		<pathelement location="${lib.bukkit}"/>
+		<pathelement location="${permissions-location}"/>
+		
+		<pathelement location="${boseconomy-location}"/>
+		<pathelement location="${essentials-location}"/>
+		<pathelement location="${ico4-location}"/>
+		<pathelement location="${ico5-location}"/>
+	</path>
+	
+	<target name="init">
+		<echo message="Building ${ant.project.name} ${plugin.version} against Bukkit ${lib.bukkit.version}..."/>
+		<mkdir dir="bin"/>
+		<copy file="${src}/plugin.yml" todir="bin" />
+	</target>
+	
+	<target name="clean">
+		<delete dir="bin"/>
+	</target>
+	
+	<target name="build" depends="init">
+		<echo message="${ant.project.name}: ${ant.file}"/>
+		<javac debug="true" debuglevel="${debuglevel}" destdir="bin" includeAntRuntime="no">
+			<src path="${src}"/>
+			<classpath refid="classpath"/>
+		</javac>
+	</target>
+	
+	<target name="jar" depends="build">
+		<jar destfile="${output-jar}" basedir="bin" />
+	</target>
+	
+	<target name="dist" depends="clean,build,jar">
+        <property name="zipfile" value="builds//${ant.project.name}_${plugin.version}.zip"/>
+        <zip destfile="${zipfile}" basedir="." includes="${output-jar} ${ant.project.name}/*" />
+    </target>
+
+	<target name="export-test" depends="dist">
+		<copy file="${output-jar}" todir="${export-dir}" />
+	</target>
+</project>
