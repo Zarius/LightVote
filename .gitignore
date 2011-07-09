@@ -1,1 +1,7 @@
-bin/**/*
+bin/*
+.classpath
+.project
+.settings/*
+dependencies/*
+builds/*
+lib/bukkit-*.jar
