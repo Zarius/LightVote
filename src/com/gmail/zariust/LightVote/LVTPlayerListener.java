@@ -248,7 +248,19 @@ public class LVTPlayerListener extends PlayerListener {
 			//long currenttime = currentWorld.getTime();				
 						
 			//startVote(this.dayVote, sender);
-		}else{
+		} else if (split[0].equals("day")) {
+			if (!this.voting) {
+				startVote(true, sender);
+			} else {
+				addToVote(this.dayVote, sender, this.dayVote);
+			}
+		} else if (split[0].equals("night")) {
+			if (!this.voting) {
+				startVote(false, sender);
+			} else {
+				addToVote(this.dayVote, sender, (!this.dayVote));
+			}
+		} else {
 			if (split[0].equalsIgnoreCase("yes") || split[0].equalsIgnoreCase("y")) {
 				addToVote(this.dayVote, sender, true);
 			} else if (split[0].equalsIgnoreCase("no") || split[0].equalsIgnoreCase("n")) {
