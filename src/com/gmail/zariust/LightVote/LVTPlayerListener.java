@@ -377,6 +377,7 @@ public class LVTPlayerListener extends PlayerListener {
 	{
 		if (plugin.config.bedVote) {
 			Player player = e.getPlayer();
+			currentWorld = player.getWorld();
 			long currenttime = player.getWorld().getTime();
 			//String[] commandArgs = {""};
 			if (!voting) {
