@@ -15,10 +15,14 @@ import org.bukkit.Material;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.PluginDescriptionFile;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.event.Event;
+
+import com.nijiko.permissions.PermissionHandler;
+import com.nijikokun.bukkit.Permissions.Permissions;
 
 
 /**
@@ -74,7 +78,42 @@ public class LightVote extends JavaPlugin {
 		"bedvote-novote-itemhits-night DIRT" + '\n' +
 		"debug-messages no" + '\n' +
 		"permanent no";
-    
+
+	public PermissionHandler permissionHandler = null;
+    public static Plugin permissionsPlugin;
+
+	void logWarning(String msg) {
+		log.warning("["+getDescription().getName()+"] "+msg);		
+	}
+	void logInfo(String msg) {
+		log.info("["+getDescription().getName()+"] "+msg);
+	}
+
+    void setupPermissions() {
+        permissionsPlugin = this.getServer().getPluginManager().getPlugin("Permissions");
+
+        if (config.usePermissions) {
+      	  if (this.permissionHandler == null) {
+      		  if (permissionsPlugin != null) {
+      			  this.permissionHandler = ((Permissions) permissionsPlugin).getHandler();
+      			  if (this.permissionHandler != null) {
+      				  this.logInfo("Hooked into Permissions.");
+      			  } else {
+      				  this.logWarning("Cannot hook into Permissions - failed.");
+      			  }
+      		  } else {
+      			  // TODO: read ops.txt file if Permissions isn't found.
+      			  System.out.println("[OtherBlocks] Permissions not found.  Permissions disabled.");
+      		  }
+      	  }
+        } else {
+      	  this.logInfo("Permissions not enabled in config.");
+      	  permissionsPlugin = null;
+      	  permissionHandler = null;
+        }
+
+      }
+	
     private void parseSettings(Scanner sc){ 
 		while(sc.hasNext()){
 			String thisline = sc.nextLine();
@@ -127,6 +166,8 @@ public class LightVote extends JavaPlugin {
 					config.bedVoteNoVoteItemHitsNight = Material.getMaterial(contents[1]);
 				}else if (contents[0].equals("debug-messages")){
 					config.debugMessages = contents[1].equals("yes");
+				}else if (contents[0].equals("use-permissions")){
+					config.usePermissions = contents[1].equals("yes");
 				}
 			}
 		}
@@ -190,6 +231,8 @@ public class LightVote extends JavaPlugin {
 				e.printStackTrace();
 			}
         }
+        
+        setupPermissions();
         
         //playerListener.config(config, voters);
         //reqYesVotes, minAgree, permaOffset, voteTime, voteFailDelay, votePassDelay, voteRemindCount, perma, voters, bedVote);

@@ -177,8 +177,14 @@ public class LVTPlayerListener extends PlayerListener {
 	
 	public boolean canSVote(CommandSender sender){
 		if(sender instanceof Player) {
+			plugin.logInfo("in perm check");
+			if (plugin.config.usePermissions && plugin.permissionHandler != null) {
+				Player player = (Player) sender;
+				plugin.logInfo("in perm check perm -"+ plugin.permissionHandler.has(player, "lvt.vote.time"));
+				return plugin.permissionHandler.has(player, "lvt.vote.time");				
+			}
 			return plugin.config.canStartVotes == null || plugin.config.canStartVotes.contains(((Player) sender).getName().toLowerCase());
-		}else return true;
+		} else return true;
 	}
 	
 	public boolean onPlayerCommand(CommandSender sender, Command command,

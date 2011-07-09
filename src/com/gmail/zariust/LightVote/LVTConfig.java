@@ -30,6 +30,7 @@ public class LVTConfig {
 	public boolean perma = false;
 	public boolean debugMessages = false;
 	public HashSet<String> canStartVotes = null;
+	public boolean usePermissions = false;
 	
 	public String msgAlreadyVoted = "You have already voted";
 	public String msgVoteAcknowledgement = "Thanks for voting! (%yesno)";
