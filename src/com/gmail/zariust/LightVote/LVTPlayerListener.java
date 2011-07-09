@@ -278,7 +278,8 @@ public class LVTPlayerListener extends PlayerListener {
 			return true;
 		}
 		if (!voting){
-			sender.sendMessage(ChatColor.GOLD + (agreed ? "'Yes'" : "'No'") + " vote attempted but no votes in progress. "+(plugin.config.lightVoteNoCommands ? "Use /lvt help to find out how to start a vote." : "Use /lvt start to start a vote for day or /lvt help for more info."));
+			sender.sendMessage(ChatColor.GOLD + (agreed ? "'Yes'" : "'No'") + " vote attempted but no votes in progress. "
+					+(plugin.config.lightVoteNoCommands ? "Use /lvt help to find out how to start a vote." : "Use /lvt start to start a vote for day or /lvt help for more info."));
 			return true;
 		}
 
