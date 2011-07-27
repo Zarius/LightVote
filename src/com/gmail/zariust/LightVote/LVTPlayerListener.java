@@ -175,18 +175,27 @@ public class LVTPlayerListener extends PlayerListener {
 		reenable.schedule(new reEnable(), (passed ? plugin.config.votePassDelay : plugin.config.voteFailDelay));
 	}
 	
-	public boolean canSVote(CommandSender sender){
+	public boolean canStartVote(CommandSender sender){
 		if(sender instanceof Player) {
-			plugin.logInfo("in perm check");
 			if (plugin.config.usePermissions && plugin.permissionHandler != null) {
 				Player player = (Player) sender;
-				plugin.logInfo("in perm check perm -"+ plugin.permissionHandler.has(player, "lvt.vote.time"));
-				return plugin.permissionHandler.has(player, "lvt.vote.time");				
+				return plugin.permissionHandler.has(player, "lvt.vote.time.start."+currentWorld.getName());				
 			}
 			return plugin.config.canStartVotes == null || plugin.config.canStartVotes.contains(((Player) sender).getName().toLowerCase());
 		} else return true;
 	}
-	
+
+	public boolean canJoinVote(CommandSender sender){
+		if(sender instanceof Player) {
+			if (canStartVote(sender)) return true; // if you can start a vote, you can join one
+			if (plugin.config.usePermissions && plugin.permissionHandler != null) {
+				Player player = (Player) sender;
+				return plugin.permissionHandler.has(player, "lvt.vote.time.join."+currentWorld.getName());				
+			}
+			return plugin.config.canStartVotes == null || plugin.config.canStartVotes.contains(((Player) sender).getName().toLowerCase());
+		} else return true;
+	}
+
 	public boolean onPlayerCommand(CommandSender sender, Command command,
     		String label, String[] args){
 
@@ -204,7 +213,7 @@ public class LVTPlayerListener extends PlayerListener {
 		if (split.length == 0 || (split.length == 1 && split[0].equalsIgnoreCase("help"))){
 			sender.sendMessage(ChatColor.GOLD + "Lightvote commands");
 			if (!(plugin.config.lightVoteNoCommands)) {
-				if(canSVote(sender)) {
+				if(canStartVote(sender)) {
 					sender.sendMessage(ChatColor.GOLD + "/lvt start -- start a vote(for day)");
 					sender.sendMessage(ChatColor.GOLD + "/lvt start night -- start a vote for night");
 				}
@@ -279,6 +288,11 @@ public class LVTPlayerListener extends PlayerListener {
 	}
 	
 	public boolean addToVote(boolean day, CommandSender sender, boolean agreed) {
+		if (!canJoinVote(sender)) {
+			sender.sendMessage(ChatColor.GOLD + "You are not allowed to join votes.");
+			return true;
+		}
+		
 		if(sender instanceof Player) if (voters.contains((Player) sender)){
 			sender.sendMessage(ChatColor.GOLD + "You have already voted");
 			return true;
@@ -330,7 +344,7 @@ public class LVTPlayerListener extends PlayerListener {
 			pname = "<CONSOLE>";
 		}
 
-		if(!canSVote(sender)){
+		if(!canStartVote(sender)){
 			sender.sendMessage(ChatColor.GOLD + "You are not allowed to start votes.");
 			return true;
 		}

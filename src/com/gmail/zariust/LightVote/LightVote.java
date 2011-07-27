@@ -77,6 +77,7 @@ public class LightVote extends JavaPlugin {
 		"bedvote-novote-iteminhand-night TORCH" + '\n' +
 		"bedvote-novote-itemhits-night DIRT" + '\n' +
 		"debug-messages no" + '\n' +
+		"use-permissions no" + '\n' +
 		"permanent no";
 
 	public PermissionHandler permissionHandler = null;
