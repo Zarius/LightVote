@@ -60,6 +60,9 @@ public class LightVote extends JavaPlugin {
 		"# night" + '\n' +
 	 	"required-yes-percentage-night 5" + '\n' +
 	 	"minimum-agree-percentage-night 50" + '\n' +
+		"# sun" + '\n' +
+	 	"required-yes-percentage-sun 5" + '\n' +
+	 	"minimum-agree-percentage-sun 50" + '\n' +
 		"vote-fail-delay 30" + '\n' +
 		"vote-pass-delay 50" + '\n' +
 		"vote-time 30" + '\n' +
@@ -137,6 +140,12 @@ public class LightVote extends JavaPlugin {
 				}else if (contents[0].equals("required-yes-percentage-night")){
 					config.reqYesVotesNight = Integer.parseInt(contents[1]);
 					config.reqYesVotesNight /= 100;
+				}else if (contents[0].equals("minimum-agree-percentage-sun")){
+					config.minAgreeSun = Integer.parseInt(contents[1]);
+					config.minAgreeSun /= 100;
+				}else if (contents[0].equals("required-yes-percentage-sun")){
+					config.reqYesVotesSun = Integer.parseInt(contents[1]);
+					config.reqYesVotesSun /= 100;
 				}else if (contents[0].equals("vote-fail-delay")){
 					config.voteFailDelay = Integer.parseInt(contents[1]) * 1000;
 				}else if (contents[0].equals("vote-pass-delay")){

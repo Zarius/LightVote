@@ -1,6 +1,6 @@
 name: LightVote
 main: com.gmail.zariust.LightVote.LightVote
-version: 1.71t
+version: 1.80t
 authors:
   - xupwup
   - Xarqn
@@ -8,5 +8,5 @@ authors:
 
 commands:
     lvt:
-        description: Vote for day or night.
+        description: Vote for day, night or sun.
         usage: /<command>

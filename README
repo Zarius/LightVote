@@ -30,3 +30,6 @@ Version 1.71t by Tickleman
 * Enable in-game translated texts
 * Choose translation language into LightVote.conf using "language fr" (replace fr by your language)
 * Added translation file fr.lang.Txt (replace fr by your language and create a new one)
+
+Version 1.80t by Tickleman
+* Vote for sun
