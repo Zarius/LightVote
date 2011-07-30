@@ -155,21 +155,29 @@ public class LightVote extends JavaPlugin {
 					config.lightVoteNoCommands = contents[1].equals("yes");
 				}else if (contents[0].equals("bedvote-iteminhand-day")){
 					config.bedVoteItemInHandDay = Material.getMaterial(contents[1]);
+					if (config.bedVoteItemInHandDay == null) System.out.println("Bad material 1 : " + contents[1]);
 				}else if (contents[0].equals("bedvote-itemhits-day")){
 					config.bedVoteItemHitsDay = Material.getMaterial(contents[1]);
+					if (config.bedVoteItemHitsDay == null) System.out.println("Bad material 1 : " + contents[1]);
 				}else if (contents[0].equals("bedvote-iteminhand-night")){
 					config.bedVoteItemInHandNight = Material.getMaterial(contents[1]);
+					if (config.bedVoteItemInHandNight == null) System.out.println("Bad material 1 : " + contents[1]);
 				}else if (contents[0].equals("bedvote-itemhits-night")){
 					config.bedVoteItemHitsNight = Material.getMaterial(contents[1]);
+					if (config.bedVoteItemHitsNight == null) System.out.println("Bad material 1 : " + contents[1]);
 
 				}else if (contents[0].equals("bedvote-novote-iteminhand-day")){
 					config.bedVoteNoVoteItemInHandDay = Material.getMaterial(contents[1]);
+					if (config.bedVoteNoVoteItemInHandDay == null) System.out.println("Bad material 1 : " + contents[1]);
 				}else if (contents[0].equals("bedvote-novote-itemhits-day")){
 					config.bedVoteNoVoteItemHitsDay = Material.getMaterial(contents[1]);
+					if (config.bedVoteNoVoteItemHitsDay == null) System.out.println("Bad material 1 : " + contents[1]);
 				}else if (contents[0].equals("bedvote-novote-iteminhand-night")){
 					config.bedVoteNoVoteItemInHandNight = Material.getMaterial(contents[1]);
+					if (config.bedVoteNoVoteItemInHandNight == null) System.out.println("Bad material 1 : " + contents[1]);
 				}else if (contents[0].equals("bedvote-novote-itemhits-night")){
 					config.bedVoteNoVoteItemHitsNight = Material.getMaterial(contents[1]);
+					if (config.bedVoteNoVoteItemHitsNight == null) System.out.println("Bad material 1 : " + contents[1]);
 				}else if (contents[0].equals("debug-messages")){
 					config.debugMessages = contents[1].equals("yes");
 				}else if (contents[0].equals("use-permissions")){
