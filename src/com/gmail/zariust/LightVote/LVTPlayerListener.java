@@ -113,7 +113,7 @@ public class LVTPlayerListener extends PlayerListener {
 				Integer seconds = (plugin.config.voteTime - remindCounter * timeBetween) / 1000;
 				player.sendMessage(
 					ChatColor.GOLD + LightVote.translate.tr("Vote for {what}, {seconds} seconds remaining.")
-					.replace("{what}", (dayVote ? "day" : "night"))
+					.replace("{what}", LightVote.translate.tr(dayVote ? "day" : "night"))
 					.replace("{seconds}", seconds.toString())
 				);
 			}
@@ -441,7 +441,7 @@ public class LVTPlayerListener extends PlayerListener {
 
 		// After all checks (vote in progress, permission, etc - set vote type to day or night
 		this.dayVote = day;
-		
+
 		voting = true;
 		plugin.sMdebug("Startvote detected... just before broadcast message.");
 
