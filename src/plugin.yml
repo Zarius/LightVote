@@ -1,9 +1,10 @@
 name: LightVote
 main: com.gmail.zariust.LightVote.LightVote
-version: 1.70
+version: 1.71t
 authors:
   - xupwup
   - Xarqn
+  - Tickleman
 
 commands:
     lvt:

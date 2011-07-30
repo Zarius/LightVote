@@ -51,8 +51,8 @@ public class LVTPlayerListener extends PlayerListener {
     	canStartVotes = set;
     	this.bedVote = bedVote;
     }*/
-    
-    private int agrees = 0;
+
+	private Integer agrees = 0;
 	private boolean dayVote = true;
 	private int remindCounter = 0;
 	private boolean disabled = false;
@@ -110,7 +110,12 @@ public class LVTPlayerListener extends PlayerListener {
 			}
 			
 			for (Player player : currentWorld.getPlayers()) {
-				player.sendMessage(ChatColor.GOLD + "Vote for " + (dayVote ? "day" : "night") + ", " + (plugin.config.voteTime - remindCounter*timeBetween)/1000 + " seconds remaining.");
+				Integer seconds = (plugin.config.voteTime - remindCounter * timeBetween) / 1000;
+				player.sendMessage(
+					LightVote.translate.tr(ChatColor.GOLD + "Vote for {what}, {seconds} seconds remaining.")
+					.replaceAll("{what}", (dayVote ? "day" : "night"))
+					.replaceAll("{seconds}", seconds.toString())
+				);
 			}
 			//plugin.getServer().broadcastMessage(ChatColor.GOLD + "Vote for " + (dayVote ? "day" : "night") + ", " + (plugin.config.voteTime - remindCounter*timeBetween)/1000 + " seconds remaining.");
 		}
@@ -136,7 +141,11 @@ public class LVTPlayerListener extends PlayerListener {
 		}
 		if (voters.size() > numplayers * reqYesVotes){
 			if (agrees > minAgree * voters.size()) {
-				msg = "Vote passed. (" + agrees + " yes, " + (voters.size() - agrees) + " no)";
+				Integer disagrees = voters.size() - agrees;
+				msg = LightVote.translate.tr("Vote passed. ({agrees} yes, {disagrees} no)")
+				.replaceAll("{agrees}", agrees.toString())
+				.replaceAll("{disagrees}", disagrees.toString());
+				//msg = "Vote passed. (" + agrees + " yes, " + (voters.size() - agrees) + " no)";
 				long currenttime = currentWorld.getTime();
 				currenttime = currenttime - (currenttime % 24000); // one day lasts 24000
 				
@@ -153,11 +162,19 @@ public class LVTPlayerListener extends PlayerListener {
 				plugin.sM("LVT: changed time to "+ (dayVote ? "day" : "night"));
 			}
 			else {
-				msg = "Vote failed. (" + agrees + " yes, " + (voters.size() - agrees) + " no)";
+				Integer disagrees = voters.size() - agrees;
+				msg = LightVote.translate.tr("Vote failed. ({agrees} yes, {disagrees} no)")
+				.replaceAll("{agrees}", agrees.toString())
+				.replaceAll("{disagrees}", disagrees.toString());
+				//msg = "Vote failed. (" + agrees + " yes, " + (voters.size() - agrees) + " no)";
 				plugin.sM("LVT: vote failed (" + voters.size() + " votes, "+ agrees + " agree)");
 			}
 		}else{
-			msg = "Vote failed, insufficient \"yes\" votes. (" + agrees + "/" + (numplayers * reqYesVotes) + ")";
+			Double numReqYesVotes = Math.ceil(numplayers * reqYesVotes * 100) / 100;
+			msg = LightVote.translate.tr("Vote failed, insufficient \"yes\" votes. ({agrees}/{required})")
+			.replaceAll("{agrees}", agrees.toString())
+			.replaceAll("{required}", numReqYesVotes.toString());
+			// msg = "Vote failed, insufficient \"yes\" votes. (" + agrees + "/" + (numplayers * reqYesVotes) + ")";
 			plugin.sM("LVT: vote failed, insufficient votes (" + agrees + " yes votes, "+ numplayers + " players, req " + (numplayers * reqYesVotes)+ ")");
 		}
 		
@@ -201,48 +218,97 @@ public class LVTPlayerListener extends PlayerListener {
 		String[] split = args;
 		if (!label.equalsIgnoreCase("lvt")) return false;
 
-		if (split.length == 0 || (split.length == 1 && split[0].equalsIgnoreCase("help"))){
-			sender.sendMessage(ChatColor.GOLD + "Lightvote commands");
+		if (split.length == 0 || (split.length == 1 && (split[0].equalsIgnoreCase("help") || split[0].equalsIgnoreCase(LightVote.translate.tr("help"))))){
+			sender.sendMessage(ChatColor.GOLD + LightVote.translate.tr("Lightvote commands"));
 			if (!(plugin.config.lightVoteNoCommands)) {
 				if(canSVote(sender)) {
-					sender.sendMessage(ChatColor.GOLD + "/lvt start -- start a vote(for day)");
-					sender.sendMessage(ChatColor.GOLD + "/lvt start night -- start a vote for night");
+					sender.sendMessage(ChatColor.GOLD + LightVote.translate.tr("/lvt start -- start a vote(for day)"));
+					sender.sendMessage(ChatColor.GOLD + LightVote.translate.tr("/lvt start night -- start a vote for night"));
 				}
-				sender.sendMessage(ChatColor.GOLD + "/lvt yes/no -- vote");
+				sender.sendMessage(ChatColor.GOLD + LightVote.translate.tr("/lvt yes/no -- vote"));
 			}
 
 			if (plugin.config.bedVote) {
-				sender.sendMessage(ChatColor.GOLD + "Bedvote: sleep in a bed to start a vote for day or agree to one in progress.");
+				sender.sendMessage(ChatColor.GOLD + LightVote.translate.tr("Bedvote: sleep in a bed to start a vote for day or agree to one in progress."));
 			}
 			
-			sender.sendMessage(ChatColor.GOLD + "Itemvote: vote for day - hit "+plugin.config.bedVoteItemInHandDay+" onto "+plugin.config.bedVoteItemHitsDay+ " for yes. " 
-					+plugin.config.bedVoteNoVoteItemInHandDay+" onto " +plugin.config.bedVoteNoVoteItemHitsDay+" for no.");
-			sender.sendMessage(ChatColor.GOLD + "Itemvote: vote for night - hit "+plugin.config.bedVoteItemInHandNight+" onto "+plugin.config.bedVoteItemHitsNight+ " for yes. " 
-					+plugin.config.bedVoteNoVoteItemInHandNight+" onto " +plugin.config.bedVoteNoVoteItemHitsNight+" for no.");
+			sender.sendMessage(
+				ChatColor.GOLD + LightVote.translate.tr("Itemvote: vote for day - hit {itemyes} onto {hitsyes} for yes. {itemno} onto {hitsno} for no.")
+				.replaceAll("{itemyes}", plugin.config.bedVoteItemInHandDay.toString())
+				.replaceAll("{hitsyes}", plugin.config.bedVoteItemHitsDay.toString())
+				.replaceAll("{itemno}", plugin.config.bedVoteNoVoteItemInHandDay.toString())
+				.replaceAll("{hitsno}", plugin.config.bedVoteNoVoteItemHitsDay.toString())
+			);
+			//sender.sendMessage(
+			//	ChatColor.GOLD + "Itemvote: vote for day - hit "
+			//	+ plugin.config.bedVoteItemInHandDay + " onto "
+			//	+ plugin.config.bedVoteItemHitsDay + " for yes. " 
+			//	+ plugin.config.bedVoteNoVoteItemInHandDay + " onto "
+			//	+ plugin.config.bedVoteNoVoteItemHitsDay + " for no."
+			//);
+			sender.sendMessage(
+				ChatColor.GOLD + LightVote.translate.tr("Itemvote: vote for night - hit {itemyes} onto {hitsyes} for yes. {itemno} onto {hitsno} for no.")
+				.replaceAll("{itemyes}", plugin.config.bedVoteItemInHandNight.toString())
+				.replaceAll("{hitsyes}", plugin.config.bedVoteItemHitsNight.toString())
+				.replaceAll("{itemno}", plugin.config.bedVoteNoVoteItemInHandNight.toString())
+				.replaceAll("{hitsno}", plugin.config.bedVoteNoVoteItemHitsNight.toString())
+			);
+			//sender.sendMessage(ChatColor.GOLD + "Itemvote: vote for night - hit "+plugin.config.bedVoteItemInHandNight+" onto "+plugin.config.bedVoteItemHitsNight+ " for yes. " 
+			//		+plugin.config.bedVoteNoVoteItemInHandNight+" onto " +plugin.config.bedVoteNoVoteItemHitsNight+" for no.");
 
-			sender.sendMessage(ChatColor.GOLD + "/lvt help -- this message");
-			sender.sendMessage(ChatColor.GOLD + "/lvt info -- some information");
+			sender.sendMessage(ChatColor.GOLD + LightVote.translate.tr("/lvt help -- this message"));
+			sender.sendMessage(ChatColor.GOLD + LightVote.translate.tr("/lvt info -- some information"));
 			return true;
 		}
 		
-		if(split[0].equalsIgnoreCase("info")){
-			sender.sendMessage(ChatColor.GOLD + "Lightvote created by XUPWUP, further developer by Xarqn");
-			sender.sendMessage(ChatColor.GOLD + "Lightvote version " + plugin.getDescription().getVersion());
-			sender.sendMessage(ChatColor.GOLD + "Static time is " + (plugin.config.perma ? "enabled" : "disabled"));
-			sender.sendMessage(ChatColor.GOLD + "Current time:" + player.getWorld().getTime()%24000 + " ("+player.getWorld().getName()+")");
-			sender.sendMessage(ChatColor.GOLD + "Bedvote is: " + (plugin.config.bedVote ? "on - sleep in a bed to vote for day." : "off."));
-			sender.sendMessage(ChatColor.GOLD + "Itemvote: vote for day - hit "+plugin.config.bedVoteItemInHandDay+" onto "+plugin.config.bedVoteItemHitsDay+ " for yes. " 
-					+plugin.config.bedVoteNoVoteItemInHandDay+" onto " +plugin.config.bedVoteNoVoteItemHitsDay+" for no.");
-			sender.sendMessage(ChatColor.GOLD + "Itemvote: vote for night - hit "+plugin.config.bedVoteItemInHandNight+" onto "+plugin.config.bedVoteItemHitsNight+ " for yes. " 
-					+plugin.config.bedVoteNoVoteItemInHandNight+" onto " +plugin.config.bedVoteNoVoteItemHitsNight+" for no.");
+		if(split[0].equalsIgnoreCase("info")||split[0].equalsIgnoreCase(LightVote.translate.tr("info"))){
+			sender.sendMessage(
+				ChatColor.GOLD + LightVote.translate.tr("Lightvote created by XUPWUP, further developer by Xarqn")
+			);
+			sender.sendMessage(
+				ChatColor.GOLD + LightVote.translate.tr("Lightvote version {version}")
+				.replaceAll("{version}", plugin.getDescription().getVersion())
+			);
+			sender.sendMessage(
+				ChatColor.GOLD + LightVote.translate.tr("Static time is {time}")
+				.replaceAll("{time}", LightVote.translate.tr(plugin.config.perma ? "enabled" : "disabled"))
+			);
+			sender.sendMessage(
+				ChatColor.GOLD + LightVote.translate.tr("Current time: {time} ({world})")
+				.replaceAll("{time}", (new Double(player.getWorld().getTime() % 24000)).toString())
+				.replaceAll("{world}", player.getWorld().getName())
+			);
+			sender.sendMessage(
+				ChatColor.GOLD + LightVote.translate.tr("Bedvote is: " + (plugin.config.bedVote ? "on - sleep in a bed to vote for day." : "off."))
+			);
+			sender.sendMessage(
+				ChatColor.GOLD + LightVote.translate.tr("Itemvote: vote for day - hit {itemyes} onto {hitsyes} for yes. {itemno} onto {hitsno} for no.")
+				.replaceAll("{itemyes}", plugin.config.bedVoteItemInHandDay.toString())
+				.replaceAll("{hitsyes}", plugin.config.bedVoteItemHitsDay.toString())
+				.replaceAll("{itemno}", plugin.config.bedVoteNoVoteItemInHandDay.toString())
+				.replaceAll("{hitsno}", plugin.config.bedVoteNoVoteItemHitsDay.toString())
+			);
+			sender.sendMessage(
+				ChatColor.GOLD + LightVote.translate.tr("Itemvote: vote for night - hit {itemyes} onto {hitsyes} for yes. {itemno} onto {hitsno} for no.")
+				.replaceAll("{itemyes}", plugin.config.bedVoteItemInHandNight.toString())
+				.replaceAll("{hitsyes}", plugin.config.bedVoteItemHitsNight.toString())
+				.replaceAll("{itemno}", plugin.config.bedVoteNoVoteItemInHandNight.toString())
+				.replaceAll("{hitsno}", plugin.config.bedVoteNoVoteItemHitsNight.toString())
+			);
 			return true;
 		}
 
 		if (!(plugin.config.lightVoteNoCommands)) {
-		if (split[0].equalsIgnoreCase("start")){
+		if (
+			split[0].equalsIgnoreCase("start")
+			|| split[0].equalsIgnoreCase(LightVote.translate.tr("start"))
+		) {
 
 			if (split.length > 1){
-				if (split[1].equalsIgnoreCase("night")) {
+				if (
+					split[1].equalsIgnoreCase("night")
+					|| split[1].equalsIgnoreCase(LightVote.translate.tr("night"))
+				) {
 					startVote(false, sender);
 				} else {
 					startVote(true, sender);
@@ -254,22 +320,36 @@ public class LVTPlayerListener extends PlayerListener {
 			//long currenttime = currentWorld.getTime();				
 						
 			//startVote(this.dayVote, sender);
-		} else if (split[0].equals("day")) {
+		} else if (
+			split[0].equalsIgnoreCase("day")
+			|| split[0].equalsIgnoreCase(LightVote.translate.tr("day"))
+		) {
 			if (!this.voting) {
 				startVote(true, sender);
 			} else {
 				addToVote(this.dayVote, sender, this.dayVote);
 			}
-		} else if (split[0].equals("night")) {
+		} else if (
+			split[0].equalsIgnoreCase("night")
+			|| split[0].equalsIgnoreCase(LightVote.translate.tr("night"))
+		) {
 			if (!this.voting) {
 				startVote(false, sender);
 			} else {
 				addToVote(this.dayVote, sender, (!this.dayVote));
 			}
 		} else {
-			if (split[0].equalsIgnoreCase("yes") || split[0].equalsIgnoreCase("y")) {
+			if (
+				split[0].equalsIgnoreCase("yes") || split[0].equalsIgnoreCase("y")
+				|| split[0].equalsIgnoreCase(LightVote.translate.tr("yes"))
+				|| split[0].equalsIgnoreCase(LightVote.translate.tr("y"))
+			) {
 				addToVote(this.dayVote, sender, true);
-			} else if (split[0].equalsIgnoreCase("no") || split[0].equalsIgnoreCase("n")) {
+			} else if (
+				split[0].equalsIgnoreCase("no") || split[0].equalsIgnoreCase("n")
+				|| split[0].equalsIgnoreCase(LightVote.translate.tr("no"))
+				|| split[0].equalsIgnoreCase(LightVote.translate.tr("n"))
+			) {
 				plugin.sMdebug("Starting no vote...");
 				addToVote(this.dayVote, sender, false);
 			}
@@ -280,12 +360,18 @@ public class LVTPlayerListener extends PlayerListener {
 	
 	public boolean addToVote(boolean day, CommandSender sender, boolean agreed) {
 		if(sender instanceof Player) if (voters.contains((Player) sender)){
-			sender.sendMessage(ChatColor.GOLD + "You have already voted");
+			sender.sendMessage(ChatColor.GOLD + LightVote.translate.tr("You have already voted"));
 			return true;
 		}
 		if (!voting){
-			sender.sendMessage(ChatColor.GOLD + (agreed ? "'Yes'" : "'No'") + " vote attempted but no votes in progress. "
-					+(plugin.config.lightVoteNoCommands ? "Use /lvt help to find out how to start a vote." : "Use /lvt start to start a vote for day or /lvt help for more info."));
+			sender.sendMessage(
+				ChatColor.GOLD + LightVote.translate.tr("'{yesno}' vote attempted but no votes in progress.")
+				.replaceAll("{yesno}", LightVote.translate.tr(agreed ? "Yes" : "No"))
+				+ (plugin.config.lightVoteNoCommands
+					? LightVote.translate.tr("Use /lvt help to find out how to start a vote.")
+					: LightVote.translate.tr("Use /lvt start to start a vote for day or /lvt help for more info.")
+				)
+			);
 			return true;
 		}
 
@@ -304,7 +390,10 @@ public class LVTPlayerListener extends PlayerListener {
 			reminder.cancel();
 			endVote();
 		}
-		sender.sendMessage(ChatColor.GOLD + "Thanks for voting! (" + (agreed ? "yes" : "no") + ")");
+		sender.sendMessage(
+			ChatColor.GOLD + LightVote.translate.tr("Thanks for voting! ({vote})")
+			.replace("{vote}", LightVote.translate.tr(agreed ? "yes" : "no"))
+		);
 
 		return true;
 	}
@@ -331,27 +420,27 @@ public class LVTPlayerListener extends PlayerListener {
 		}
 
 		if(!canSVote(sender)){
-			sender.sendMessage(ChatColor.GOLD + "You are not allowed to start votes.");
+			sender.sendMessage(ChatColor.GOLD + LightVote.translate.tr("You are not allowed to start votes."));
 			return true;
 		}
 		if (voting) {
-			sender.sendMessage(ChatColor.GOLD + "A vote is still in progress.");
+			sender.sendMessage(ChatColor.GOLD + LightVote.translate.tr("A vote is still in progress."));
 			return true;
 		}
 		
 		if (disabled){
-			sender.sendMessage(ChatColor.GOLD + "You cannot vote again this quickly.");
+			sender.sendMessage(ChatColor.GOLD + LightVote.translate.tr("You cannot vote again this quickly."));
 			return true;
 		}
 		
 		if (isDay(currentWorld.getTime())){ // it is day now
 			if (day){
-				sender.sendMessage(ChatColor.GOLD + "It is already day!");
+				sender.sendMessage(ChatColor.GOLD + LightVote.translate.tr("It is already day!"));
 				return true;
 			}
 		}else{ // it is night now
 			if (!day){
-				sender.sendMessage(ChatColor.GOLD + "It is already night!");
+				sender.sendMessage(ChatColor.GOLD + LightVote.translate.tr("It is already night!"));
 				return true;
 			}
 		}
@@ -363,11 +452,16 @@ public class LVTPlayerListener extends PlayerListener {
 		plugin.sMdebug("Startvote detected... just before broadcast message.");
 
 		for (Player player : currentWorld.getPlayers()) {
-			player.sendMessage(ChatColor.GOLD + "Lightvote " + daymsg + " in world '"+currentWorld.getName()+"' started by "+ pname + ",");
+			player.sendMessage(
+				ChatColor.GOLD + LightVote.translate.tr("Lightvote {daynight} in world '{world}' started by {player},")
+				.replaceAll("{daynight}", LightVote.translate.tr(daymsg))
+				.replaceAll("{world}", currentWorld.getName())
+				.replaceAll("{player}", pname)
+			);
 			if (plugin.config.lightVoteNoCommands) {
-				player.sendMessage(ChatColor.GOLD + "type /lvt help to find out how to vote.");
+				player.sendMessage(ChatColor.GOLD + LightVote.translate.tr("type /lvt help to find out how to vote."));
 			} else {
-				player.sendMessage(ChatColor.GOLD + "type /lvt yes, or /lvt no to vote.");
+				player.sendMessage(ChatColor.GOLD + LightVote.translate.tr("type /lvt yes, or /lvt no to vote."));
 			}
 		}
 

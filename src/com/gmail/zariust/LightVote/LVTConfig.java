@@ -6,6 +6,7 @@ import java.util.HashSet;
 import org.bukkit.Material;
 
 public class LVTConfig {
+	public String language = "en";
 	public Material bedVoteItem = null;
 	public double reqYesVotesDay = 0.05;
 	public double minAgreeDay = 0.5;

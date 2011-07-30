@@ -25,3 +25,8 @@ Version 1.68
 TODO:
 Allow a vote style similar to bedvote for voting for daytime
 Multiworld support
+
+Version 1.71t by Tickleman
+* Enable in-game translated texts
+* Choose translation language into LightVote.conf using "language fr" (replace fr by your language)
+* Added translation file fr.lang.Txt (replace fr by your language and create a new one)

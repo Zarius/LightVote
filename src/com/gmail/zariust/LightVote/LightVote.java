@@ -24,6 +24,8 @@ import org.bukkit.event.Event;
 import com.nijiko.permissions.PermissionHandler;
 import com.nijikokun.bukkit.Permissions.Permissions;
 
+import fr.crafter.tickleman.RealPlugin.RealTranslationFile;
+
 
 /**
  * LightVote for Bukkit
@@ -31,7 +33,8 @@ import com.nijikokun.bukkit.Permissions.Permissions;
  * @author XUPWUP
  */
 public class LightVote extends JavaPlugin {
-    private LVTPlayerListener playerListener;
+	public static RealTranslationFile translate;
+	private LVTPlayerListener playerListener;
     private final HashMap<Player, Boolean> debugees = new HashMap<Player, Boolean>();
 	private Logger log;
 	public LVTConfig config;
@@ -48,6 +51,7 @@ public class LightVote extends JavaPlugin {
 	//private boolean perma = false;
 	//private boolean debugMessages;
 	private static final String defaultConfig = 
+		"language fr\n" +
 		"# At least 'required-yes-percentage'*peopleOnServer people must vote yes, " +
 		"and there must be more people that voted yes than no" + '\n' + 
 		"# day" + '\n' +
@@ -119,7 +123,9 @@ public class LightVote extends JavaPlugin {
 			String thisline = sc.nextLine();
 			String[] contents = thisline.split(" ");
 			if (contents.length > 1){
-				if (contents[0].equals("minimum-agree-percentage-day")){
+				if (contents[0].equals("language")){
+					config.language = contents[1];
+				}else if (contents[0].equals("minimum-agree-percentage-day")){
 						config.minAgreeDay = Integer.parseInt(contents[1]);
 						config.minAgreeDay /= 100;
 				}else if (contents[0].equals("required-yes-percentage-day")){
@@ -175,7 +181,7 @@ public class LightVote extends JavaPlugin {
 
    
 
-    public void onEnable() {        
+    public void onEnable() { 
     	log = Logger.getLogger("Minecraft");
     	config = new LVTConfig();
     	playerListener = new LVTPlayerListener(this, log);
@@ -231,9 +237,12 @@ public class LightVote extends JavaPlugin {
 				e.printStackTrace();
 			}
         }
-        
-        setupPermissions();
-        
+
+	    	LightVote.translate = new RealTranslationFile(this, config.language).load();
+	    	sM(LightVote.translate.tr("Language is " + config.language));
+
+	    	setupPermissions();
+
         //playerListener.config(config, voters);
         //reqYesVotes, minAgree, permaOffset, voteTime, voteFailDelay, votePassDelay, voteRemindCount, perma, voters, bedVote);
 
