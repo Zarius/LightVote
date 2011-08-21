@@ -129,23 +129,24 @@ public class LightVote extends JavaPlugin {
 				if (contents[0].equals("language")){
 					config.language = contents[1];
 				}else if (contents[0].equals("minimum-agree-percentage-day")){
-						config.minAgreeDay = Integer.parseInt(contents[1]);
-						config.minAgreeDay /= 100;
+						config.minAgreeDay = Double.parseDouble(contents[1]);
+						config.minAgreeDay /= 100.0;
 				}else if (contents[0].equals("required-yes-percentage-day")){
-					config.reqYesVotesDay = Integer.parseInt(contents[1]);
-					config.reqYesVotesDay /= 100;
+					config.reqYesVotesDay = Double.parseDouble(contents[1]);
+					config.reqYesVotesDay /= 100.0;
 				}else if (contents[0].equals("minimum-agree-percentage-night")){
-						config.minAgreeNight = Integer.parseInt(contents[1]);
-						config.minAgreeNight /= 100;
+						config.minAgreeNight = Double.parseDouble(contents[1]);
+						config.minAgreeNight /= 100.0;
+System.out.println("minAgreeNight = " + config.minAgreeNight);
 				}else if (contents[0].equals("required-yes-percentage-night")){
-					config.reqYesVotesNight = Integer.parseInt(contents[1]);
-					config.reqYesVotesNight /= 100;
+					config.reqYesVotesNight = Double.parseDouble(contents[1]);
+					config.reqYesVotesNight /= 100.0;
 				}else if (contents[0].equals("minimum-agree-percentage-sun")){
-					config.minAgreeSun = Integer.parseInt(contents[1]);
-					config.minAgreeSun /= 100;
+					config.minAgreeSun = Double.parseDouble(contents[1]);
+					config.minAgreeSun /= 100.0;
 				}else if (contents[0].equals("required-yes-percentage-sun")){
-					config.reqYesVotesSun = Integer.parseInt(contents[1]);
-					config.reqYesVotesSun /= 100;
+					config.reqYesVotesSun = Double.parseDouble(contents[1]);
+					config.reqYesVotesSun /= 100.0;
 				}else if (contents[0].equals("vote-fail-delay")){
 					config.voteFailDelay = Integer.parseInt(contents[1]) * 1000;
 				}else if (contents[0].equals("vote-pass-delay")){

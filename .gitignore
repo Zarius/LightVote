@@ -1,7 +1,15 @@
-bin/*
++# Ignore some system/work files
+bin
+docs
+Thumbs.db
++# Ignore GIT metadata
+.git
++# Ignore Eclipse-specific metadata
 .classpath
 .project
-.settings/*
-dependencies/*
-builds/*
-lib/bukkit-*.jar
+.settings
++# Ignore NetBeans-specific metadata
++build.xml
++build/*
++manifest.mf
++nbproject

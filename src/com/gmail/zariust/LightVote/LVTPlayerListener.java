@@ -1,6 +1,7 @@
 package com.gmail.zariust.LightVote;
 
-import java.util.List;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 //import java.util.Set;
 import java.util.Timer;
@@ -109,7 +110,7 @@ public class LVTPlayerListener extends PlayerListener {
 				return;
 			}
 			
-			for (Player player : currentWorld.getPlayers()) {
+			for (Player player : onlinePlayers(currentWorld)) {
 				Integer seconds = (plugin.config.voteTime - remindCounter * timeBetween) / 1000;
 				player.sendMessage(
 					ChatColor.GOLD + LightVote.translate.tr("Vote for {what}, {seconds} seconds remaining.")
@@ -122,7 +123,7 @@ public class LVTPlayerListener extends PlayerListener {
 	
 	private void endVote(){
 		plugin.sMdebug("Starting endvote...");
-		List<Player> playerlist = currentWorld.getPlayers();
+		Collection<Player> playerlist = onlinePlayers(currentWorld);
 		plugin.sMdebug("Endvote: got players...");
 		String msg = "";
 		boolean passed = false;
@@ -144,47 +145,61 @@ public class LVTPlayerListener extends PlayerListener {
 			reqYesVotes = 0.005;
 			minAgree = 0.5;
 		}
-		if (voters.size() > numplayers * reqYesVotes){
-			if (agrees > minAgree * voters.size()) {
-				Integer disagrees = voters.size() - agrees;
-				msg = LightVote.translate.tr("Vote passed. ({agrees} yes, {disagrees} no)")
-				.replace("{agrees}", agrees.toString())
-				.replace("{disagrees}", disagrees.toString());
-				long currenttime = currentWorld.getTime();
-				currenttime = currenttime - (currenttime % 24000); // one day lasts 24000
-				
-				if (currenttime < 0){
-					currenttime *= -1;
-					plugin.sM("LVT: Current time was negative!");
-				}
-				
-				if (dayVote == "sun") currenttime += nightstart;
-				if(plugin.config.perma) currenttime += plugin.config.permaOffset;
-				
-				if ((dayVote == "day") || (dayVote == "night")) {
-					currentWorld.setTime(currenttime);
-				} else if (dayVote == "sun") {
-					if (currentWorld.hasStorm() || currentWorld.isThundering()) {
-						currentWorld.setWeatherDuration(1);
-						currentWorld.setStorm(false);
+
+		int onlinePlayers = 0;
+		for (Player player : onlinePlayers(plugin.getServer().getWorld("world_skylands"))) {
+			if (player.isOnline()) onlinePlayers ++;
+		}
+		if ((dayVote == "day") && (onlinePlayers > 0)) {
+
+			// check if someone is on world_skylands (specific)
+			msg = LightVote.translate.tr("Vote failed, some players are into {world}")
+				.replace("{world}", LightVote.translate.tr("world_skylands"));
+
+		} else {
+
+			if (voters.size() > numplayers * reqYesVotes){
+				if (agrees > minAgree * voters.size()) {
+					Integer disagrees = voters.size() - agrees;
+					msg = LightVote.translate.tr("Vote passed. ({agrees} yes, {disagrees} no)")
+					.replace("{agrees}", agrees.toString())
+					.replace("{disagrees}", disagrees.toString());
+					long currenttime = currentWorld.getTime();
+					currenttime = currenttime - (currenttime % 24000); // one day lasts 24000
+					
+					if (currenttime < 0){
+						currenttime *= -1;
+						plugin.sM("LVT: Current time was negative!");
 					}
+					
+					if (dayVote == "sun") currenttime += nightstart;
+					if(plugin.config.perma) currenttime += plugin.config.permaOffset;
+					
+					if ((dayVote == "day") || (dayVote == "night")) {
+						currentWorld.setTime(currenttime);
+					} else if (dayVote == "sun") {
+						if (currentWorld.hasStorm() || currentWorld.isThundering()) {
+							currentWorld.setWeatherDuration(1);
+							currentWorld.setStorm(false);
+						}
+					}
+					passed = true;
+					plugin.sM("LVT: changed time to "+ (dayVote));
 				}
-				passed = true;
-				plugin.sM("LVT: changed time to "+ (dayVote));
-			}
-			else {
-				Integer disagrees = voters.size() - agrees;
-				msg = LightVote.translate.tr("Vote failed. ({agrees} yes, {disagrees} no)")
+				else {
+					Integer disagrees = voters.size() - agrees;
+					msg = LightVote.translate.tr("Vote failed. ({agrees} yes, {disagrees} no)")
+					.replace("{agrees}", agrees.toString())
+					.replace("{disagrees}", disagrees.toString());
+					plugin.sM("LVT: vote failed (" + voters.size() + " votes, "+ agrees + " agree)");
+				}
+			}else{
+				Double numReqYesVotes = Math.ceil(numplayers * reqYesVotes * 100) / 100;
+				msg = LightVote.translate.tr("Vote failed, insufficient \"yes\" votes. ({agrees}/{required})")
 				.replace("{agrees}", agrees.toString())
-				.replace("{disagrees}", disagrees.toString());
-				plugin.sM("LVT: vote failed (" + voters.size() + " votes, "+ agrees + " agree)");
+				.replace("{required}", numReqYesVotes.toString());
+				plugin.sM("LVT: vote failed, insufficient votes (" + agrees + " yes votes, "+ numplayers + " players, req " + (numplayers * reqYesVotes)+ ")");
 			}
-		}else{
-			Double numReqYesVotes = Math.ceil(numplayers * reqYesVotes * 100) / 100;
-			msg = LightVote.translate.tr("Vote failed, insufficient \"yes\" votes. ({agrees}/{required})")
-			.replace("{agrees}", agrees.toString())
-			.replace("{required}", numReqYesVotes.toString());
-			plugin.sM("LVT: vote failed, insufficient votes (" + agrees + " yes votes, "+ numplayers + " players, req " + (numplayers * reqYesVotes)+ ")");
 		}
 		
 		plugin.sMdebug("Endvote: checked status, broadcasting message...");
@@ -405,7 +420,7 @@ public class LVTPlayerListener extends PlayerListener {
 		}
 
 		if(sender instanceof Player) voters.add((Player)sender);
-		if (voters.size() == currentWorld.getPlayers().size()){// plugin.getServer().getOnlinePlayers().length){
+		if (voters.size() == onlinePlayers(currentWorld).size()){// plugin.getServer().getOnlinePlayers().length){
 			t.cancel();
 			t = new Timer();
 			reminder.cancel();
@@ -481,7 +496,7 @@ public class LVTPlayerListener extends PlayerListener {
 		voting = true;
 		plugin.sMdebug("Startvote detected... just before broadcast message.");
 
-		for (Player player : currentWorld.getPlayers()) {
+		for (Player player : onlinePlayers(currentWorld)) {
 			player.sendMessage(
 				ChatColor.GOLD + LightVote.translate.tr("Lightvote {daynight} in world '{world}' started by {player},")
 				.replace("{daynight}", LightVote.translate.tr(daymsg))
@@ -499,7 +514,7 @@ public class LVTPlayerListener extends PlayerListener {
 		//plugin.getServer().broadcastMessage(ChatColor.GOLD + "type /lvt yes, or /lvt no to vote.");
 		
 		t.schedule(new voteEnd(), plugin.config.voteTime);
-		if (voters.size() == currentWorld.getPlayers().size()){
+		if (voters.size() == onlinePlayers(currentWorld).size()){
 			t.cancel();
 			t = new Timer();
 			endVote();
@@ -588,4 +603,18 @@ public class LVTPlayerListener extends PlayerListener {
 			System.err.println("LightVote - 'onPlayerInteract' Error: " + exception.getMessage());			  
 		}
 	}
+
+	public Collection<Player> onlinePlayers(World world)
+	{
+		HashMap<String, Player> players = new HashMap<String, Player>();
+		if (world == null) {
+			return players.values();
+		} else {
+			for (Player player : world.getPlayers()) {
+				if (player.isOnline()) players.put(player.getName(), player);
+			}
+			return players.values();
+		}
+	}
+
 }
