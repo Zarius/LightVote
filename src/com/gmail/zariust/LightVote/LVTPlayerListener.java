@@ -171,9 +171,9 @@ public class LVTPlayerListener extends PlayerListener {
 						currenttime *= -1;
 						plugin.sM("LVT: Current time was negative!");
 					}
-					
-					if (dayVote == "sun") currenttime += nightstart;
-					if(plugin.config.perma) currenttime += plugin.config.permaOffset;
+
+					if (dayVote == "night") currenttime += nightstart;
+					if (plugin.config.perma) currenttime += plugin.config.permaOffset;
 					
 					if ((dayVote == "day") || (dayVote == "night")) {
 						currentWorld.setTime(currenttime);
