@@ -184,9 +184,7 @@ public class LightVote extends JavaPlugin {
     	
     	// Register event for beds
 		PluginManager pm = this.getServer().getPluginManager();
-    	pm.registerEvent(Event.Type.PLAYER_BED_ENTER, playerListener, Event.Priority.Normal, this);
-    	pm.registerEvent(Event.Type.PLAYER_INTERACT, playerListener, Event.Priority.Normal, this);
-		
+		pm.registerEvents(playerListener, this);		
         
         File folder = new File("plugins" + File.separator + "LightVote");
         if (!folder.exists()) {

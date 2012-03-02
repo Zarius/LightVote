@@ -13,16 +13,18 @@ import org.bukkit.World;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
+import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerBedEnterEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
-import org.bukkit.event.player.PlayerListener;
 
 /**
  * Handle events for all Player related events
  * @author XUPWUP
  */
-public class LVTPlayerListener extends PlayerListener {
+public class LVTPlayerListener implements Listener {
     private final LightVote plugin;
     //private Logger log;
 
@@ -179,7 +181,7 @@ public class LVTPlayerListener extends PlayerListener {
 		if(sender instanceof Player) {
 			if (plugin.config.usePermissions && plugin.permissionHandler != null) {
 				Player player = (Player) sender;
-				return plugin.permissionHandler.has(player, "lvt.vote.time.start."+currentWorld.getName());				
+				return plugin.permissionHandler.has(player, "lvt.vote.time.start");				
 			}
 			return plugin.config.canStartVotes == null || plugin.config.canStartVotes.contains(((Player) sender).getName().toLowerCase());
 		} else return true;
@@ -190,7 +192,7 @@ public class LVTPlayerListener extends PlayerListener {
 			if (canStartVote(sender)) return true; // if you can start a vote, you can join one
 			if (plugin.config.usePermissions && plugin.permissionHandler != null) {
 				Player player = (Player) sender;
-				return plugin.permissionHandler.has(player, "lvt.vote.time.join."+currentWorld.getName());				
+				return plugin.permissionHandler.has(player, "lvt.vote.time.join");				
 			}
 			return plugin.config.canStartVotes == null || plugin.config.canStartVotes.contains(((Player) sender).getName().toLowerCase());
 		} else return true;
@@ -406,6 +408,7 @@ public class LVTPlayerListener extends PlayerListener {
 		return true;
 	}
 
+	@EventHandler(priority = EventPriority.NORMAL, ignoreCancelled = true)
 	public void onPlayerBedEnter (PlayerBedEnterEvent e)
 	{
 		if (plugin.config.bedVote) {
@@ -423,6 +426,7 @@ public class LVTPlayerListener extends PlayerListener {
 		}
 	}
 	
+	@EventHandler(priority = EventPriority.NORMAL, ignoreCancelled = true)
 	public void onPlayerInteract (PlayerInteractEvent e)
 	{
 		try {

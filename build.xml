@@ -39,7 +39,8 @@
 	</last>
 	<property name="lib.bukkit.jar" refid="lib.bukkit.jar"/>
 	<propertyregex property="lib.bukkit.version" input="${lib.bukkit.jar}" regexp="([\d\.]+-r\d+)\.jar$" select="\1"/>
-	<property name="lib.bukkit" location="${lib}/bukkit-${lib.bukkit.version}.jar"/>
+
+	<property name="lib.bukkit" location="${lib}/bukkit.jar"/>
 	
 	<property name="logblock-location" value="dependencies/LogBlock.jar"/>
 	<property name="permissions-location" value="dependencies/Permissions.jar"/>
@@ -50,7 +51,7 @@
 	<property name="ico5-location" value="dependencies/EconomyRegister/iCo5.jar"/>
 	
 	<property name="output-jar" value="${ant.project.name}.jar"/>
-	<property name="export-dir" value="/home/zarius/Games/Minecraft/Servers/ifami.test.igrow/plugins/"/>
+	<property name="export-dir" value="/home/zarius/Games/Minecraft/Servers/Ifami/Testing/plugins"/>
 	
 	<property name="debuglevel" value="source,lines"/>
 	
