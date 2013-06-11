@@ -1,11 +1,12 @@
 name: LightVote
 main: com.gmail.zariust.LightVote.LightVote
-version: 1.73
+version: 1.82tz
 authors:
   - xupwup
   - Xarqn
+  - Tickleman
 
 commands:
     lvt:
-        description: Vote for day or night.
+        description: Vote for day, night or sun.
         usage: /<command>

@@ -6,11 +6,14 @@ import java.util.HashSet;
 import org.bukkit.Material;
 
 public class LVTConfig {
+	public String language = "en";
 	public Material bedVoteItem = null;
 	public double reqYesVotesDay = 0.05;
 	public double minAgreeDay = 0.5;
 	public double reqYesVotesNight = 0.05;
 	public double minAgreeNight = 0.5;
+	public double reqYesVotesSun = 0.05;
+	public double minAgreeSun = 0.5;
 	public int permaOffset = 4000; 
 	public int voteTime = 30000;
 	public int voteFailDelay = 30000;

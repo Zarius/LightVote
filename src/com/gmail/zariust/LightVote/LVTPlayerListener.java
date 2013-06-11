@@ -1,8 +1,8 @@
 package com.gmail.zariust.LightVote;
 
-import java.util.List;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
-//import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.logging.Logger;
@@ -19,6 +19,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerBedEnterEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
+//import java.util.Set;
 
 /**
  * Handle events for all Player related events
@@ -53,9 +54,9 @@ public class LVTPlayerListener implements Listener {
     	canStartVotes = set;
     	this.bedVote = bedVote;
     }*/
-    
-    private int agrees = 0;
-	private boolean dayVote = true;
+
+	private Integer agrees = 0;
+	private String dayVote = "day";
 	private int remindCounter = 0;
 	private boolean disabled = false;
 	private boolean voting = false;
@@ -79,7 +80,8 @@ public class LVTPlayerListener implements Listener {
 	}
 	
 	private class timeReset extends TimerTask{
-		public void run(){
+		@Override
+        public void run(){
 			long currenttime = plugin.getServer().getWorlds().get(0).getTime();
 			boolean isNight = !isDay(currenttime);
 			currenttime = currenttime - (currenttime % 24000); // one day lasts 24000
@@ -91,19 +93,22 @@ public class LVTPlayerListener implements Listener {
 	
 	
 	private class voteEnd extends TimerTask{
-		public void run(){
+		@Override
+        public void run(){
 			endVote();
 		}
 	}
 	
 	private class reEnable extends TimerTask{
-		public void run(){
+		@Override
+        public void run(){
 			disabled = false;
 		}
 	}
 	
 	private class remind extends TimerTask{
-		public void run(){
+		@Override
+        public void run(){
 			int timeBetween = plugin.config.voteTime / (plugin.config.voteRemindCount+1);
 			remindCounter++;
 			if (remindCounter > plugin.config.voteRemindCount) {
@@ -111,16 +116,20 @@ public class LVTPlayerListener implements Listener {
 				return;
 			}
 			
-			for (Player player : currentWorld.getPlayers()) {
-				player.sendMessage(ChatColor.GOLD + "Vote for " + (dayVote ? "day" : "night") + ", " + (plugin.config.voteTime - remindCounter*timeBetween)/1000 + " seconds remaining.");
+			for (Player player : onlinePlayers(currentWorld)) {
+				Integer seconds = (plugin.config.voteTime - remindCounter * timeBetween) / 1000;
+				player.sendMessage(
+					ChatColor.GOLD + LightVote.translate.tr("Vote for {what}, {seconds} seconds remaining.")
+					.replace("{what}", LightVote.translate.tr(dayVote))
+					.replace("{seconds}", seconds.toString())
+				);
 			}
-			//plugin.getServer().broadcastMessage(ChatColor.GOLD + "Vote for " + (dayVote ? "day" : "night") + ", " + (plugin.config.voteTime - remindCounter*timeBetween)/1000 + " seconds remaining.");
 		}
 	}	
 	
 	private void endVote(){
 		plugin.sMdebug("Starting endvote...");
-		List<Player> playerlist = currentWorld.getPlayers();
+		Collection<Player> playerlist = onlinePlayers(currentWorld);
 		plugin.sMdebug("Endvote: got players...");
 		String msg = "";
 		boolean passed = false;
@@ -129,38 +138,74 @@ public class LVTPlayerListener implements Listener {
 		double minAgree;
 		
 		int numplayers = playerlist.size();
-		if (dayVote) {
+		if (dayVote == "day") {
 			reqYesVotes = plugin.config.reqYesVotesDay;
 			minAgree = plugin.config.minAgreeDay;
-		} else {
+		} else if (dayVote == "night") {
 			reqYesVotes = plugin.config.reqYesVotesNight;
 			minAgree = plugin.config.minAgreeNight;
+		} else if (dayVote == "sun") {
+			reqYesVotes = plugin.config.reqYesVotesSun;
+			minAgree = plugin.config.minAgreeSun;
+		} else {
+			reqYesVotes = 0.005;
+			minAgree = 0.5;
 		}
-		if (voters.size() > numplayers * reqYesVotes){
-			if (agrees > minAgree * voters.size()) {
-				msg = "Vote passed. (" + agrees + " yes, " + (voters.size() - agrees) + " no)";
-				long currenttime = currentWorld.getTime();
-				currenttime = currenttime - (currenttime % 24000); // one day lasts 24000
-				
-				if (currenttime < 0){
-					currenttime *= -1;
-					plugin.sM("LVT: Current time was negative!");
+
+		int onlinePlayers = 0;
+		for (Player player : onlinePlayers(plugin.getServer().getWorld("world_skylands"))) {
+			if (player.isOnline()) onlinePlayers ++;
+		}
+		if ((dayVote == "day") && (onlinePlayers > 0)) {
+
+			// check if someone is on world_skylands (specific)
+			msg = LightVote.translate.tr("Vote failed, some players are into {world}")
+				.replace("{world}", LightVote.translate.tr("world_skylands"));
+
+		} else {
+
+			if (voters.size() > numplayers * reqYesVotes){
+				if (agrees > minAgree * voters.size()) {
+					Integer disagrees = voters.size() - agrees;
+					msg = LightVote.translate.tr("Vote passed. ({agrees} yes, {disagrees} no)")
+					.replace("{agrees}", agrees.toString())
+					.replace("{disagrees}", disagrees.toString());
+					long currenttime = currentWorld.getTime();
+					currenttime = currenttime - (currenttime % 24000); // one day lasts 24000
+
+					if (currenttime < 0){
+						currenttime *= -1;
+						plugin.sM("LVT: Current time was negative!");
+					}
+
+					if (dayVote == "night") currenttime += nightstart;
+					if (plugin.config.perma) currenttime += plugin.config.permaOffset;
+
+					if ((dayVote == "day") || (dayVote == "night")) {
+						currentWorld.setTime(currenttime);
+					} else if (dayVote == "sun") {
+						if (currentWorld.hasStorm() || currentWorld.isThundering()) {
+							currentWorld.setWeatherDuration(1);
+							currentWorld.setStorm(false);
+						}
+					}
+					passed = true;
+					plugin.sM("LVT: changed time to "+ (dayVote));
 				}
-				
-				if (!dayVote) currenttime += nightstart;
-				if(plugin.config.perma) currenttime += plugin.config.permaOffset;
-				
-				currentWorld.setTime(currenttime);
-				passed = true;
-				plugin.sM("LVT: changed time to "+ (dayVote ? "day" : "night"));
+				else {
+					Integer disagrees = voters.size() - agrees;
+					msg = LightVote.translate.tr("Vote failed. ({agrees} yes, {disagrees} no)")
+					.replace("{agrees}", agrees.toString())
+					.replace("{disagrees}", disagrees.toString());
+					plugin.sM("LVT: vote failed (" + voters.size() + " votes, "+ agrees + " agree)");
+				}
+			}else{
+				Double numReqYesVotes = Math.ceil(numplayers * reqYesVotes * 100) / 100;
+				msg = LightVote.translate.tr("Vote failed, insufficient \"yes\" votes. ({agrees}/{required})")
+				.replace("{agrees}", agrees.toString())
+				.replace("{required}", numReqYesVotes.toString());
+				plugin.sM("LVT: vote failed, insufficient votes (" + agrees + " yes votes, "+ numplayers + " players, req " + (numplayers * reqYesVotes)+ ")");
 			}
-			else {
-				msg = "Vote failed. (" + agrees + " yes, " + (voters.size() - agrees) + " no)";
-				plugin.sM("LVT: vote failed (" + voters.size() + " votes, "+ agrees + " agree)");
-			}
-		}else{
-			msg = "Vote failed, insufficient \"yes\" votes. (" + agrees + "/" + (numplayers * reqYesVotes) + ")";
-			plugin.sM("LVT: vote failed, insufficient votes (" + agrees + " yes votes, "+ numplayers + " players, req " + (numplayers * reqYesVotes)+ ")");
 		}
 		
 		plugin.sMdebug("Endvote: checked status, broadcasting message...");
@@ -168,7 +213,6 @@ public class LVTPlayerListener implements Listener {
 		for (Player player : playerlist) {
 			player.sendMessage(ChatColor.GOLD + msg);
 		}
-		//plugin.getServer().broadcastMessage(ChatColor.GOLD + msg);
 		agrees = 0;
 		voters = new HashSet<Player>();
 		voting = false;
@@ -212,75 +256,151 @@ public class LVTPlayerListener implements Listener {
 		String[] split = args;
 		if (!label.equalsIgnoreCase("lvt")) return false;
 
-		if (split.length == 0 || (split.length == 1 && split[0].equalsIgnoreCase("help"))){
-			sender.sendMessage(ChatColor.GOLD + "Lightvote commands");
+		if (split.length == 0 || (split.length == 1 && (split[0].equalsIgnoreCase("help") || split[0].equalsIgnoreCase(LightVote.translate.tr("help"))))){
+			sender.sendMessage(ChatColor.GOLD + LightVote.translate.tr("Lightvote commands"));
 			if (!(plugin.config.lightVoteNoCommands)) {
 				if(canStartVote(sender)) {
-					sender.sendMessage(ChatColor.GOLD + "/lvt start -- start a vote(for day)");
-					sender.sendMessage(ChatColor.GOLD + "/lvt start night -- start a vote for night");
+					sender.sendMessage(ChatColor.GOLD + LightVote.translate.tr("/lvt start -- start a vote(for day)"));
+					sender.sendMessage(ChatColor.GOLD + LightVote.translate.tr("/lvt start night -- start a vote for night"));
 				}
-				sender.sendMessage(ChatColor.GOLD + "/lvt yes/no -- vote");
+				sender.sendMessage(ChatColor.GOLD + LightVote.translate.tr("/lvt yes/no -- vote"));
 			}
 
 			if (plugin.config.bedVote) {
-				sender.sendMessage(ChatColor.GOLD + "Bedvote: sleep in a bed to start a vote for day or agree to one in progress.");
+				sender.sendMessage(ChatColor.GOLD + LightVote.translate.tr("Bedvote: sleep in a bed to start a vote for day or agree to one in progress."));
 			}
 			
-			sender.sendMessage(ChatColor.GOLD + "Itemvote: vote for day - hit "+plugin.config.bedVoteItemInHandDay+" onto "+plugin.config.bedVoteItemHitsDay+ " for yes. " 
-					+plugin.config.bedVoteNoVoteItemInHandDay+" onto " +plugin.config.bedVoteNoVoteItemHitsDay+" for no.");
-			sender.sendMessage(ChatColor.GOLD + "Itemvote: vote for night - hit "+plugin.config.bedVoteItemInHandNight+" onto "+plugin.config.bedVoteItemHitsNight+ " for yes. " 
-					+plugin.config.bedVoteNoVoteItemInHandNight+" onto " +plugin.config.bedVoteNoVoteItemHitsNight+" for no.");
+			try {
+			sender.sendMessage(
+				ChatColor.GOLD + LightVote.translate.tr("Itemvote: vote for day - hit {itemyes} onto {hitsyes} for yes. {itemno} onto {hitsno} for no.")
+				.replace("{itemyes}", plugin.config.bedVoteItemInHandDay.name())
+				.replace("{hitsyes}", plugin.config.bedVoteItemHitsDay.name())
+				.replace("{itemno}", plugin.config.bedVoteNoVoteItemInHandDay.name())
+				.replace("{hitsno}", plugin.config.bedVoteNoVoteItemHitsDay.name())
+			);
+			sender.sendMessage(
+				ChatColor.GOLD + LightVote.translate.tr("Itemvote: vote for night - hit {itemyes} onto {hitsyes} for yes. {itemno} onto {hitsno} for no.")
+				.replace("{itemyes}", plugin.config.bedVoteItemInHandNight.name())
+				.replace("{hitsyes}", plugin.config.bedVoteItemHitsNight.name())
+				.replace("{itemno}", plugin.config.bedVoteNoVoteItemInHandNight.name())
+				.replace("{hitsno}", plugin.config.bedVoteNoVoteItemHitsNight.name())
+			);
+			} catch (Exception e) {
+				System.out.println("Exception on help");
+			}
 
-			sender.sendMessage(ChatColor.GOLD + "/lvt help -- this message");
-			sender.sendMessage(ChatColor.GOLD + "/lvt info -- some information");
+			sender.sendMessage(ChatColor.GOLD + LightVote.translate.tr("/lvt help -- this message"));
+			sender.sendMessage(ChatColor.GOLD + LightVote.translate.tr("/lvt info -- some information"));
 			return true;
 		}
 		
-		if(split[0].equalsIgnoreCase("info")){
-			sender.sendMessage(ChatColor.GOLD + "Lightvote created by XUPWUP, further developer by Xarqn");
-			sender.sendMessage(ChatColor.GOLD + "Lightvote version " + plugin.getDescription().getVersion());
-			sender.sendMessage(ChatColor.GOLD + "Static time is " + (plugin.config.perma ? "enabled" : "disabled"));
-			sender.sendMessage(ChatColor.GOLD + "Current time:" + player.getWorld().getTime()%24000 + " ("+player.getWorld().getName()+")");
-			sender.sendMessage(ChatColor.GOLD + "Bedvote is: " + (plugin.config.bedVote ? "on - sleep in a bed to vote for day." : "off."));
-			sender.sendMessage(ChatColor.GOLD + "Itemvote: vote for day - hit "+plugin.config.bedVoteItemInHandDay+" onto "+plugin.config.bedVoteItemHitsDay+ " for yes. " 
-					+plugin.config.bedVoteNoVoteItemInHandDay+" onto " +plugin.config.bedVoteNoVoteItemHitsDay+" for no.");
-			sender.sendMessage(ChatColor.GOLD + "Itemvote: vote for night - hit "+plugin.config.bedVoteItemInHandNight+" onto "+plugin.config.bedVoteItemHitsNight+ " for yes. " 
-					+plugin.config.bedVoteNoVoteItemInHandNight+" onto " +plugin.config.bedVoteNoVoteItemHitsNight+" for no.");
+		if(split[0].equalsIgnoreCase("info")||split[0].equalsIgnoreCase(LightVote.translate.tr("info"))){
+			sender.sendMessage(
+				ChatColor.GOLD + LightVote.translate.tr("Lightvote created by XUPWUP, further developer by Xarqn, Tickleman")
+			);
+			sender.sendMessage(
+				ChatColor.GOLD + LightVote.translate.tr("Lightvote version {version}")
+				.replace("{version}", plugin.getDescription().getVersion())
+			);
+			sender.sendMessage(
+				ChatColor.GOLD + LightVote.translate.tr("Static time is {time}")
+				.replace("{time}", LightVote.translate.tr(plugin.config.perma ? "enabled" : "disabled"))
+			);
+			sender.sendMessage(
+				ChatColor.GOLD + LightVote.translate.tr("Current time: {time} ({world})")
+				.replace("{time}", (new Double(player.getWorld().getTime() % 24000)).toString())
+				.replace("{world}", player.getWorld().getName())
+			);
+			sender.sendMessage(
+				ChatColor.GOLD + LightVote.translate.tr("Bedvote is: " + (plugin.config.bedVote ? "on - sleep in a bed to vote for day." : "off."))
+			);
+			try {
+				sender.sendMessage(
+					ChatColor.GOLD + LightVote.translate.tr("Itemvote: vote for day - hit {itemyes} onto {hitsyes} for yes. {itemno} onto {hitsno} for no.")
+					.replace("{itemyes}", plugin.config.bedVoteItemInHandDay.name())
+					.replace("{hitsyes}", plugin.config.bedVoteItemHitsDay.name())
+					.replace("{itemno}", plugin.config.bedVoteNoVoteItemInHandDay.name())
+					.replace("{hitsno}", plugin.config.bedVoteNoVoteItemHitsDay.name())
+						);
+				sender.sendMessage(
+					ChatColor.GOLD + LightVote.translate.tr("Itemvote: vote for night - hit {itemyes} onto {hitsyes} for yes. {itemno} onto {hitsno} for no.")
+					.replace("{itemyes}", plugin.config.bedVoteItemInHandNight.name())
+					.replace("{hitsyes}", plugin.config.bedVoteItemHitsNight.name())
+					.replace("{itemno}", plugin.config.bedVoteNoVoteItemInHandNight.name())
+					.replace("{hitsno}", plugin.config.bedVoteNoVoteItemHitsNight.name())
+				);
+			} catch (Exception e) {
+				System.out.println("Exception on info");
+			}
 			return true;
 		}
 
 		if (!(plugin.config.lightVoteNoCommands)) {
-		if (split[0].equalsIgnoreCase("start")){
+		if (
+			split[0].equalsIgnoreCase("start")
+			|| split[0].equalsIgnoreCase(LightVote.translate.tr("start"))
+		) {
 
 			if (split.length > 1){
-				if (split[1].equalsIgnoreCase("night")) {
-					startVote(false, sender);
+				if (
+					split[1].equalsIgnoreCase("night")
+					|| split[1].equalsIgnoreCase(LightVote.translate.tr("night"))
+				) {
+					startVote("night", sender);
+				} else if (
+					split[1].equalsIgnoreCase("sun")
+					|| split[1].equalsIgnoreCase(LightVote.translate.tr("sun"))
+				) {
+					startVote("sun", sender);
 				} else {
-					startVote(true, sender);
+					startVote("day", sender);
 				}
 			} else {
-				startVote(true, sender);
+				startVote("day", sender);
 			}
 			
 			//long currenttime = currentWorld.getTime();				
 						
 			//startVote(this.dayVote, sender);
-		} else if (split[0].equals("day")) {
+		} else if (
+			split[0].equalsIgnoreCase("day")
+			|| split[0].equalsIgnoreCase(LightVote.translate.tr("day"))
+		) {
 			if (!this.voting) {
-				startVote(true, sender);
+				startVote("day", sender);
 			} else {
-				addToVote(this.dayVote, sender, this.dayVote);
+				addToVote(this.dayVote, sender, this.dayVote == "day");
 			}
-		} else if (split[0].equals("night")) {
+		} else if (
+			split[0].equalsIgnoreCase("night")
+			|| split[0].equalsIgnoreCase(LightVote.translate.tr("night"))
+		) {
 			if (!this.voting) {
-				startVote(false, sender);
+				startVote("night", sender);
 			} else {
-				addToVote(this.dayVote, sender, (!this.dayVote));
+				addToVote(this.dayVote, sender, this.dayVote == "night");
 			}
+		} else if (
+				split[0].equalsIgnoreCase("sun")
+				|| split[0].equalsIgnoreCase(LightVote.translate.tr("sun"))
+			) {
+				if (!this.voting) {
+					startVote("sun", sender);
+				} else {
+					addToVote(this.dayVote, sender, this.dayVote == "sun");
+				}
 		} else {
-			if (split[0].equalsIgnoreCase("yes") || split[0].equalsIgnoreCase("y")) {
+			if (
+				split[0].equalsIgnoreCase("yes") || split[0].equalsIgnoreCase("y")
+				|| split[0].equalsIgnoreCase(LightVote.translate.tr("yes"))
+				|| split[0].equalsIgnoreCase(LightVote.translate.tr("y"))
+			) {
 				addToVote(this.dayVote, sender, true);
-			} else if (split[0].equalsIgnoreCase("no") || split[0].equalsIgnoreCase("n")) {
+			} else if (
+				split[0].equalsIgnoreCase("no") || split[0].equalsIgnoreCase("n")
+				|| split[0].equalsIgnoreCase(LightVote.translate.tr("no"))
+				|| split[0].equalsIgnoreCase(LightVote.translate.tr("n"))
+			) {
 				plugin.sMdebug("Starting no vote...");
 				addToVote(this.dayVote, sender, false);
 			}
@@ -289,19 +409,25 @@ public class LVTPlayerListener implements Listener {
 		return true;
 	}
 	
-	public boolean addToVote(boolean day, CommandSender sender, boolean agreed) {
+	public boolean addToVote(String voteWhat, CommandSender sender, boolean agreed) {
 		if (!canJoinVote(sender)) {
-			sender.sendMessage(ChatColor.GOLD + "You are not allowed to join votes.");
+			sender.sendMessage(ChatColor.GOLD + LightVote.translate.tr("You are not allowed to join votes."));
 			return true;
 		}
 		
-		if(sender instanceof Player) if (voters.contains((Player) sender)){
-			sender.sendMessage(ChatColor.GOLD + "You have already voted");
+		if(sender instanceof Player) if (voters.contains(sender)){
+			sender.sendMessage(ChatColor.GOLD + LightVote.translate.tr("You have already voted"));
 			return true;
 		}
 		if (!voting){
-			sender.sendMessage(ChatColor.GOLD + (agreed ? "'Yes'" : "'No'") + " vote attempted but no votes in progress. "
-					+(plugin.config.lightVoteNoCommands ? "Use /lvt help to find out how to start a vote." : "Use /lvt start to start a vote for day or /lvt help for more info."));
+			sender.sendMessage(
+				ChatColor.GOLD + LightVote.translate.tr("'{yesno}' vote attempted but no votes in progress.")
+				.replace("{yesno}", LightVote.translate.tr(agreed ? "Yes" : "No"))
+				+ (plugin.config.lightVoteNoCommands
+					? LightVote.translate.tr("Use /lvt help to find out how to start a vote.")
+					: LightVote.translate.tr("Use /lvt start to start a vote for day or /lvt help for more info.")
+				)
+			);
 			return true;
 		}
 
@@ -314,27 +440,34 @@ public class LVTPlayerListener implements Listener {
 		}
 
 		if(sender instanceof Player) voters.add((Player)sender);
-		if (voters.size() == currentWorld.getPlayers().size()){// plugin.getServer().getOnlinePlayers().length){
+		if (voters.size() == onlinePlayers(currentWorld).size()){// plugin.getServer().getOnlinePlayers().length){
 			t.cancel();
 			t = new Timer();
 			reminder.cancel();
 			endVote();
 		}
-		sender.sendMessage(ChatColor.GOLD + "Thanks for voting! (" + (agreed ? "yes" : "no") + ")");
+		sender.sendMessage(
+			ChatColor.GOLD + LightVote.translate.tr("Thanks for voting! ({vote})")
+			.replace("{vote}", LightVote.translate.tr(agreed ? "yes" : "no"))
+		);
 
 		return true;
 	}
 		
-	public boolean startVote(boolean day, CommandSender sender) {
+	public boolean startVote(String voteWhat, CommandSender sender) {
 
 		String daymsg = "";
-		if (day){
+		if (voteWhat.equals("day")) {
 			daymsg = "for daylight";
-		}else daymsg = "for darkness";
-		
+		} else if (voteWhat.equals("night")) {
+			daymsg = "for darkness";
+		} else if (voteWhat.equals("sun")) {
+			daymsg = "for sun";
+		}
+
 		String pname;
 		
-		this.dayVote = day;
+		this.dayVote = voteWhat;
 		
 		voters.clear();
 		agrees = 1;
@@ -347,43 +480,53 @@ public class LVTPlayerListener implements Listener {
 		}
 
 		if(!canStartVote(sender)){
-			sender.sendMessage(ChatColor.GOLD + "You are not allowed to start votes.");
+			sender.sendMessage(ChatColor.GOLD + LightVote.translate.tr("You are not allowed to start votes."));
 			return true;
 		}
 		if (voting) {
-			sender.sendMessage(ChatColor.GOLD + "A vote is still in progress.");
+			sender.sendMessage(ChatColor.GOLD + LightVote.translate.tr("A vote is still in progress."));
 			return true;
 		}
 		
 		if (disabled){
-			sender.sendMessage(ChatColor.GOLD + "You cannot vote again this quickly.");
+			sender.sendMessage(ChatColor.GOLD + LightVote.translate.tr("You cannot vote again this quickly."));
 			return true;
 		}
 		
 		if (isDay(currentWorld.getTime())){ // it is day now
-			if (day){
-				sender.sendMessage(ChatColor.GOLD + "It is already day!");
+			if (voteWhat == "day"){
+				sender.sendMessage(ChatColor.GOLD + LightVote.translate.tr("It is already day!"));
 				return true;
 			}
 		}else{ // it is night now
-			if (!day){
-				sender.sendMessage(ChatColor.GOLD + "It is already night!");
+			if (voteWhat == "night"){
+				sender.sendMessage(ChatColor.GOLD + LightVote.translate.tr("It is already night!"));
 				return true;
+			}
+		}
+		if (voteWhat == "sun") {
+			if (!currentWorld.hasStorm() && !currentWorld.isThundering()) {
+				sender.sendMessage(ChatColor.GOLD + LightVote.translate.tr("The sun is already shining!"));
 			}
 		}
 
 		// After all checks (vote in progress, permission, etc - set vote type to day or night
-		this.dayVote = day;
-		
+		this.dayVote = voteWhat;
+
 		voting = true;
 		plugin.sMdebug("Startvote detected... just before broadcast message.");
 
-		for (Player player : currentWorld.getPlayers()) {
-			player.sendMessage(ChatColor.GOLD + "Lightvote " + daymsg + " in world '"+currentWorld.getName()+"' started by "+ pname + ",");
+		for (Player player : onlinePlayers(currentWorld)) {
+			player.sendMessage(
+				ChatColor.GOLD + LightVote.translate.tr("Lightvote {daynight} in world '{world}' started by {player},")
+				.replace("{daynight}", LightVote.translate.tr(daymsg))
+				.replace("{world}", currentWorld.getName())
+				.replace("{player}", pname)
+			);
 			if (plugin.config.lightVoteNoCommands) {
-				player.sendMessage(ChatColor.GOLD + "type /lvt help to find out how to vote.");
+				player.sendMessage(ChatColor.GOLD + LightVote.translate.tr("type /lvt help to find out how to vote."));
 			} else {
-				player.sendMessage(ChatColor.GOLD + "type /lvt yes, or /lvt no to vote.");
+				player.sendMessage(ChatColor.GOLD + LightVote.translate.tr("type /lvt yes, or /lvt no to vote."));
 			}
 		}
 
@@ -391,7 +534,7 @@ public class LVTPlayerListener implements Listener {
 		//plugin.getServer().broadcastMessage(ChatColor.GOLD + "type /lvt yes, or /lvt no to vote.");
 		
 		t.schedule(new voteEnd(), plugin.config.voteTime);
-		if (voters.size() == currentWorld.getPlayers().size()){
+		if (voters.size() == onlinePlayers(currentWorld).size()){
 			t.cancel();
 			t = new Timer();
 			endVote();
@@ -417,9 +560,9 @@ public class LVTPlayerListener implements Listener {
 			long currenttime = player.getWorld().getTime();
 			//String[] commandArgs = {""};
 			if (!voting) {
-				startVote(!(isDay(currenttime)), player);
+				startVote(isDay(currenttime) ? "night" : "day", player);
 			} else {
-				addToVote(!(isDay(currenttime)), player, true);
+				addToVote(isDay(currenttime) ? "night" : "day", player, true);
 			}
 			//player.sendMessage(ChatColor.GOLD + "Sleeping, attempting to vote for day time...");
 			//onPlayerCommand(player, null, String.valueOf("lvt"), commandArgs);
@@ -458,9 +601,9 @@ public class LVTPlayerListener implements Listener {
 						if (e.getItem().getType() == itemInHand) {
 							plugin.sMdebug("Bedvote interaction detected... items matched.");
 							if (!voting) {
-								startVote(!(isDay(currenttime)), player);
+								startVote(isDay(currenttime) ? "night" : "day", player);
 							} else {
-								addToVote(!(isDay(currenttime)), player, true);
+								addToVote(isDay(currenttime) ? "night" : "day", player, true);
 							}
 						}
 					}
@@ -471,7 +614,7 @@ public class LVTPlayerListener implements Listener {
 							if (voting) {
 								//startVote(!(isDay(currenttime)), player);
 							//} else {
-								addToVote(!(isDay(currenttime)), player, false);
+								addToVote(isDay(currenttime) ? "night" : "day", player, false);
 							}
 						}
 					}
@@ -482,4 +625,18 @@ public class LVTPlayerListener implements Listener {
 			System.err.println("LightVote - 'onPlayerInteract' Error: " + exception.getMessage());			  
 		}
 	}
+
+	public Collection<Player> onlinePlayers(World world)
+	{
+		HashMap<String, Player> players = new HashMap<String, Player>();
+		if (world == null) {
+			return players.values();
+		} else {
+			for (Player player : world.getPlayers()) {
+				if (player.isOnline()) players.put(player.getName(), player);
+			}
+			return players.values();
+		}
+	}
+
 }

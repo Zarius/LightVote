@@ -24,6 +24,8 @@ import org.bukkit.event.Event;
 import com.nijiko.permissions.PermissionHandler;
 import com.nijikokun.bukkit.Permissions.Permissions;
 
+import fr.crafter.tickleman.RealPlugin.RealTranslationFile;
+
 
 /**
  * LightVote for Bukkit
@@ -31,7 +33,8 @@ import com.nijikokun.bukkit.Permissions.Permissions;
  * @author XUPWUP
  */
 public class LightVote extends JavaPlugin {
-    private LVTPlayerListener playerListener;
+	public static RealTranslationFile translate;
+	private LVTPlayerListener playerListener;
     private final HashMap<Player, Boolean> debugees = new HashMap<Player, Boolean>();
 	private Logger log;
 	public LVTConfig config;
@@ -48,6 +51,7 @@ public class LightVote extends JavaPlugin {
 	//private boolean perma = false;
 	//private boolean debugMessages;
 	private static final String defaultConfig = 
+		"language fr\n" +
 		"# At least 'required-yes-percentage'*peopleOnServer people must vote yes, " +
 		"and there must be more people that voted yes than no" + '\n' + 
 		"# day" + '\n' +
@@ -56,6 +60,9 @@ public class LightVote extends JavaPlugin {
 		"# night" + '\n' +
 	 	"required-yes-percentage-night 5" + '\n' +
 	 	"minimum-agree-percentage-night 50" + '\n' +
+		"# sun" + '\n' +
+	 	"required-yes-percentage-sun 5" + '\n' +
+	 	"minimum-agree-percentage-sun 50" + '\n' +
 		"vote-fail-delay 30" + '\n' +
 		"vote-pass-delay 50" + '\n' +
 		"vote-time 30" + '\n' +
@@ -120,18 +127,27 @@ public class LightVote extends JavaPlugin {
 			String thisline = sc.nextLine();
 			String[] contents = thisline.split(" ");
 			if (contents.length > 1){
-				if (contents[0].equals("minimum-agree-percentage-day")){
-						config.minAgreeDay = Integer.parseInt(contents[1]);
-						config.minAgreeDay /= 100;
+				if (contents[0].equals("language")){
+					config.language = contents[1];
+				}else if (contents[0].equals("minimum-agree-percentage-day")){
+						config.minAgreeDay = Double.parseDouble(contents[1]);
+						config.minAgreeDay /= 100.0;
 				}else if (contents[0].equals("required-yes-percentage-day")){
-					config.reqYesVotesDay = Integer.parseInt(contents[1]);
-					config.reqYesVotesDay /= 100;
+					config.reqYesVotesDay = Double.parseDouble(contents[1]);
+					config.reqYesVotesDay /= 100.0;
 				}else if (contents[0].equals("minimum-agree-percentage-night")){
-						config.minAgreeNight = Integer.parseInt(contents[1]);
-						config.minAgreeNight /= 100;
+						config.minAgreeNight = Double.parseDouble(contents[1]);
+						config.minAgreeNight /= 100.0;
+System.out.println("minAgreeNight = " + config.minAgreeNight);
 				}else if (contents[0].equals("required-yes-percentage-night")){
-					config.reqYesVotesNight = Integer.parseInt(contents[1]);
-					config.reqYesVotesNight /= 100;
+					config.reqYesVotesNight = Double.parseDouble(contents[1]);
+					config.reqYesVotesNight /= 100.0;
+				}else if (contents[0].equals("minimum-agree-percentage-sun")){
+					config.minAgreeSun = Double.parseDouble(contents[1]);
+					config.minAgreeSun /= 100.0;
+				}else if (contents[0].equals("required-yes-percentage-sun")){
+					config.reqYesVotesSun = Double.parseDouble(contents[1]);
+					config.reqYesVotesSun /= 100.0;
 				}else if (contents[0].equals("vote-fail-delay")){
 					config.voteFailDelay = Integer.parseInt(contents[1]) * 1000;
 				}else if (contents[0].equals("vote-pass-delay")){
@@ -150,21 +166,29 @@ public class LightVote extends JavaPlugin {
 					config.lightVoteNoCommands = contents[1].equals("yes");
 				}else if (contents[0].equals("bedvote-iteminhand-day")){
 					config.bedVoteItemInHandDay = Material.getMaterial(contents[1]);
+					if (config.bedVoteItemInHandDay == null) System.out.println("Bad material 1 : " + contents[1]);
 				}else if (contents[0].equals("bedvote-itemhits-day")){
 					config.bedVoteItemHitsDay = Material.getMaterial(contents[1]);
+					if (config.bedVoteItemHitsDay == null) System.out.println("Bad material 1 : " + contents[1]);
 				}else if (contents[0].equals("bedvote-iteminhand-night")){
 					config.bedVoteItemInHandNight = Material.getMaterial(contents[1]);
+					if (config.bedVoteItemInHandNight == null) System.out.println("Bad material 1 : " + contents[1]);
 				}else if (contents[0].equals("bedvote-itemhits-night")){
 					config.bedVoteItemHitsNight = Material.getMaterial(contents[1]);
+					if (config.bedVoteItemHitsNight == null) System.out.println("Bad material 1 : " + contents[1]);
 
 				}else if (contents[0].equals("bedvote-novote-iteminhand-day")){
 					config.bedVoteNoVoteItemInHandDay = Material.getMaterial(contents[1]);
+					if (config.bedVoteNoVoteItemInHandDay == null) System.out.println("Bad material 1 : " + contents[1]);
 				}else if (contents[0].equals("bedvote-novote-itemhits-day")){
 					config.bedVoteNoVoteItemHitsDay = Material.getMaterial(contents[1]);
+					if (config.bedVoteNoVoteItemHitsDay == null) System.out.println("Bad material 1 : " + contents[1]);
 				}else if (contents[0].equals("bedvote-novote-iteminhand-night")){
 					config.bedVoteNoVoteItemInHandNight = Material.getMaterial(contents[1]);
+					if (config.bedVoteNoVoteItemInHandNight == null) System.out.println("Bad material 1 : " + contents[1]);
 				}else if (contents[0].equals("bedvote-novote-itemhits-night")){
 					config.bedVoteNoVoteItemHitsNight = Material.getMaterial(contents[1]);
+					if (config.bedVoteNoVoteItemHitsNight == null) System.out.println("Bad material 1 : " + contents[1]);
 				}else if (contents[0].equals("debug-messages")){
 					config.debugMessages = contents[1].equals("yes");
 				}else if (contents[0].equals("use-permissions")){
@@ -176,7 +200,7 @@ public class LightVote extends JavaPlugin {
 
    
 
-    public void onEnable() {        
+    public void onEnable() { 
     	log = Logger.getLogger("Minecraft");
     	config = new LVTConfig();
     	playerListener = new LVTPlayerListener(this, log);
@@ -230,9 +254,12 @@ public class LightVote extends JavaPlugin {
 				e.printStackTrace();
 			}
         }
-        
-        setupPermissions();
-        
+
+	    	LightVote.translate = new RealTranslationFile(this, config.language).load();
+	    	sM(LightVote.translate.tr("Language is " + config.language));
+
+	    	setupPermissions();
+
         //playerListener.config(config, voters);
         //reqYesVotes, minAgree, permaOffset, voteTime, voteFailDelay, votePassDelay, voteRemindCount, perma, voters, bedVote);
 
