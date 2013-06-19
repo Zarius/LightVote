@@ -17,9 +17,8 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.PluginDescriptionFile;
-import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.plugin.PluginManager;
-import org.bukkit.event.Event;
+import org.bukkit.plugin.java.JavaPlugin;
 
 import com.nijiko.permissions.PermissionHandler;
 import com.nijikokun.bukkit.Permissions.Permissions;
@@ -85,7 +84,8 @@ public class LightVote extends JavaPlugin {
 		"bedvote-novote-itemhits-night DIRT" + '\n' +
 		"debug-messages no" + '\n' +
 		"use-permissions no" + '\n' +
-		"permanent no";
+		"permanent no" + '\n' +
+	    "perma-offset 4000";
 
 	public PermissionHandler permissionHandler = null;
     public static Plugin permissionsPlugin;
@@ -138,7 +138,7 @@ public class LightVote extends JavaPlugin {
 				}else if (contents[0].equals("minimum-agree-percentage-night")){
 						config.minAgreeNight = Double.parseDouble(contents[1]);
 						config.minAgreeNight /= 100.0;
-System.out.println("minAgreeNight = " + config.minAgreeNight);
+//System.out.println("minAgreeNight = " + config.minAgreeNight);
 				}else if (contents[0].equals("required-yes-percentage-night")){
 					config.reqYesVotesNight = Double.parseDouble(contents[1]);
 					config.reqYesVotesNight /= 100.0;
@@ -158,6 +158,8 @@ System.out.println("minAgreeNight = " + config.minAgreeNight);
 					config.voteRemindCount = Integer.parseInt(contents[1]);
 				}else if (contents[0].equals("permanent")){
 					config.perma = contents[1].equals("yes");
+                }else if (contents[0].equals("perma-offset")){
+                    config.permaOffset = Integer.parseInt(contents[1]);
 				}else if (contents[0].equals("bedvote")){
 					config.bedVote = contents[1].equals("yes");
 				}else if (contents[0].equals("itemvote")){
@@ -200,6 +202,7 @@ System.out.println("minAgreeNight = " + config.minAgreeNight);
 
    
 
+    @Override
     public void onEnable() { 
     	log = Logger.getLogger("Minecraft");
     	config = new LVTConfig();
@@ -291,6 +294,7 @@ System.out.println("minAgreeNight = " + config.minAgreeNight);
 
     	return playerListener.onPlayerCommand(sender, command, label, args);
     }
+    @Override
     public void onDisable() {
     	if (playerListener.tReset != null) playerListener.tReset.cancel();
 
