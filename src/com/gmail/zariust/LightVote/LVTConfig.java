@@ -37,4 +37,5 @@ public class LVTConfig {
 	
 	public String msgAlreadyVoted = "You have already voted";
 	public String msgVoteAcknowledgement = "Thanks for voting! (%yesno)";
+    public boolean enableMetrics = true;
 }

@@ -223,9 +223,9 @@ public class LVTPlayerListener implements Listener {
 	
 	public boolean canStartVote(CommandSender sender){
 		if(sender instanceof Player) {
-			if (plugin.config.usePermissions && plugin.permissionHandler != null) {
+			if (plugin.config.usePermissions) {
 				Player player = (Player) sender;
-				return plugin.permissionHandler.has(player, "lvt.vote.time.start");				
+				return player.hasPermission("lvt.vote.time.start");				
 			}
 			return plugin.config.canStartVotes == null || plugin.config.canStartVotes.contains(((Player) sender).getName().toLowerCase());
 		} else return true;
@@ -234,9 +234,9 @@ public class LVTPlayerListener implements Listener {
 	public boolean canJoinVote(CommandSender sender){
 		if(sender instanceof Player) {
 			if (canStartVote(sender)) return true; // if you can start a vote, you can join one
-			if (plugin.config.usePermissions && plugin.permissionHandler != null) {
+			if (plugin.config.usePermissions) {
 				Player player = (Player) sender;
-				return plugin.permissionHandler.has(player, "lvt.vote.time.join");				
+				return player.hasPermission("lvt.vote.time.join");				
 			}
 			return plugin.config.canStartVotes == null || plugin.config.canStartVotes.contains(((Player) sender).getName().toLowerCase());
 		} else return true;

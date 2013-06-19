@@ -20,8 +20,7 @@ import org.bukkit.plugin.PluginDescriptionFile;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import com.nijiko.permissions.PermissionHandler;
-import com.nijikokun.bukkit.Permissions.Permissions;
+import com.gmail.zariust.LightVote.metrics.Metrics;
 
 import fr.crafter.tickleman.RealPlugin.RealTranslationFile;
 
@@ -32,6 +31,8 @@ import fr.crafter.tickleman.RealPlugin.RealTranslationFile;
  * @author XUPWUP
  */
 public class LightVote extends JavaPlugin {
+    public static Metrics metrics = null;
+    
 	public static RealTranslationFile translate;
 	private LVTPlayerListener playerListener;
     private final HashMap<Player, Boolean> debugees = new HashMap<Player, Boolean>();
@@ -85,10 +86,8 @@ public class LightVote extends JavaPlugin {
 		"debug-messages no" + '\n' +
 		"use-permissions no" + '\n' +
 		"permanent no" + '\n' +
-	    "perma-offset 4000";
-
-	public PermissionHandler permissionHandler = null;
-    public static Plugin permissionsPlugin;
+	    "perma-offset 4000" + '\n' +
+		"enable-metrics yes";
 
 	void logWarning(String msg) {
 		log.warning("["+getDescription().getName()+"] "+msg);		
@@ -96,31 +95,6 @@ public class LightVote extends JavaPlugin {
 	void logInfo(String msg) {
 		log.info("["+getDescription().getName()+"] "+msg);
 	}
-
-    void setupPermissions() {
-        permissionsPlugin = this.getServer().getPluginManager().getPlugin("Permissions");
-
-        if (config.usePermissions) {
-      	  if (this.permissionHandler == null) {
-      		  if (permissionsPlugin != null) {
-      			  this.permissionHandler = ((Permissions) permissionsPlugin).getHandler();
-      			  if (this.permissionHandler != null) {
-      				  this.logInfo("Hooked into Permissions.");
-      			  } else {
-      				  this.logWarning("Cannot hook into Permissions - failed.");
-      			  }
-      		  } else {
-      			  // TODO: read ops.txt file if Permissions isn't found.
-      			  System.out.println("[OtherBlocks] Permissions not found.  Permissions disabled.");
-      		  }
-      	  }
-        } else {
-      	  this.logInfo("Permissions not enabled in config.");
-      	  permissionsPlugin = null;
-      	  permissionHandler = null;
-        }
-
-      }
 	
     private void parseSettings(Scanner sc){ 
 		while(sc.hasNext()){
@@ -195,6 +169,8 @@ public class LightVote extends JavaPlugin {
 					config.debugMessages = contents[1].equals("yes");
 				}else if (contents[0].equals("use-permissions")){
 					config.usePermissions = contents[1].equals("yes");
+				}else if (contents[0].equals("enable-metrics")){
+                    config.usePermissions = contents[1].equals("yes");
 				}
 			}
 		}
@@ -261,16 +237,25 @@ public class LightVote extends JavaPlugin {
 	    	LightVote.translate = new RealTranslationFile(this, config.language).load();
 	    	sM(LightVote.translate.tr("Language is " + config.language));
 
-	    	setupPermissions();
-
         //playerListener.config(config, voters);
         //reqYesVotes, minAgree, permaOffset, voteTime, voteFailDelay, votePassDelay, voteRemindCount, perma, voters, bedVote);
 
         if(config.perma){
         	playerListener.setReset();
         }
+        
+        if (config.enableMetrics) enableMetrics();
     }
     
+    public void enableMetrics() {
+        try {
+            metrics = new Metrics(this);
+            metrics.start();
+        } catch (IOException e) {
+            // Failed to submit the stats :-(
+        }
+    }
+
     private void updateVoters(File f){
     	try {
 			Scanner sc = new Scanner(f);
