@@ -9,4 +9,5 @@ authors:
 commands:
     lvt:
         description: Vote for day, night or sun.
+        aliases: [vote, lightvote]
         usage: /<command>
