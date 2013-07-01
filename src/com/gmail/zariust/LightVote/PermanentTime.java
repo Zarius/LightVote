@@ -27,4 +27,14 @@ public class PermanentTime {
     	}
     }
 
+    public static void init() {
+        if (LightVote.config.perma)
+            PermanentTime.setReset();
+    }
+
+    public static void cancel() {
+        if (timer != null)
+            timer.cancel();
+    }
+
 }
