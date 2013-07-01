@@ -6,8 +6,8 @@ import java.util.TimerTask;
 import org.bukkit.Bukkit;
 
 public class PermanentTime {
-    static Timer timer = null;
-    static final int nightstart = 14000;
+    private static Timer timer = null;
+    public static final int nightstart = 14000;
 
     public static void setReset() {
         timer = new Timer();
