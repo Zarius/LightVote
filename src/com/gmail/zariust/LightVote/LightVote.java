@@ -23,7 +23,7 @@ public class LightVote extends JavaPlugin {
     public static Metrics metrics = null;
     public static RealTranslationFile translate;
     private LVTPlayerListener playerListener;
-    public Log log;
+    public Log log = new Log();
     public static LVTConfig config;
     public ConfigManager configManager;
 
