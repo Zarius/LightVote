@@ -3,13 +3,12 @@ package com.gmail.zariust.LightVote;
 
 import java.io.IOException;
 
-import org.bukkit.command.Command;
-import org.bukkit.command.CommandSender;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import com.gmail.zariust.LightVote.config.ConfigManager;
 import com.gmail.zariust.LightVote.metrics.Metrics;
+import com.gmail.zariust.LightVote.votes.VoteManager;
 
 import fr.crafter.tickleman.RealPlugin.RealTranslationFile;
 
@@ -26,12 +25,14 @@ public class LightVote extends JavaPlugin {
     public Log log = new Log();
     public static LVTConfig config;
     public ConfigManager configManager;
+    public VoteManager voteManager = new VoteManager(this);
 
     @Override
     public void onEnable() { 
         loadConfig();
         loadLanguageFile();
         registerListeners();
+        registerCommands();
         setPermanentTimeIfConfigured();
         enableMetricsIfConfigured();
     }
@@ -47,6 +48,10 @@ public class LightVote extends JavaPlugin {
         // Register event for beds
         PluginManager pm = this.getServer().getPluginManager();
         pm.registerEvents(playerListener, this);
+    }
+
+    private void registerCommands() {
+        this.getCommand("lvt").setExecutor(new CommandManager(this));
     }
 
     public void loadConfig() {
@@ -74,10 +79,4 @@ public class LightVote extends JavaPlugin {
         }
     }
 
-    @Override
-    public boolean onCommand(CommandSender sender, Command command,
-            String label, String[] args) {
-
-        return playerListener.onPlayerCommand(sender, command, label, args);
-    }
 }

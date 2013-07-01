@@ -14,7 +14,7 @@ public class RealTranslationFile
 
 	private final String fileName;
 
-	private HashMap<String, String> translations	= new HashMap<String, String>();
+	private final HashMap<String, String> translations	= new HashMap<String, String>();
 
 	private final JavaPlugin plugin;
 
