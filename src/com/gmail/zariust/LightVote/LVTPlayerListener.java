@@ -1,11 +1,9 @@
 package com.gmail.zariust.LightVote;
 
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Timer;
 import java.util.TimerTask;
-import java.util.logging.Logger;
 
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
@@ -29,14 +27,7 @@ public class LVTPlayerListener implements Listener {
     private final LightVote plugin;
     //private Logger log;
 
-	//private double reqYesVotes, minAgree;
-	//private int permaOffset; 
-	//private int voteTime, voteFailDelay, votePassDelay, voteRemindCount;
-	//private boolean perma, bedVote;
-	private static final int nightstart = 14000;
-	//private Set<String> canStartVotes = null;
-    
-    public LVTPlayerListener(LightVote instance) {
+	public LVTPlayerListener(LightVote instance) {
         plugin = instance;
     }
 	
@@ -59,8 +50,7 @@ public class LVTPlayerListener implements Listener {
 	private int remindCounter = 0;
 	private boolean disabled = false;
 	private boolean voting = false;
-	Timer tReset = null;
-	private World currentWorld = null;
+    private World currentWorld = null;
 	
 	private HashSet<Player> voters = new HashSet<Player>();
 	
@@ -68,30 +58,7 @@ public class LVTPlayerListener implements Listener {
 	Timer reminder;
 	
 	
-	private boolean isDay(long currenttime){
-		return ((currenttime % 24000) < 12000 && currenttime > 0 )|| (currenttime < 0 && (currenttime % 24000) < -12000);
-	}
-	
-	
-	public void setReset(){
-		tReset = new Timer();
-    	tReset.schedule(new timeReset(), 15000, 15000);
-	}
-	
-	private class timeReset extends TimerTask{
-		@Override
-        public void run(){
-			long currenttime = plugin.getServer().getWorlds().get(0).getTime();
-			boolean isNight = !isDay(currenttime);
-			currenttime = currenttime - (currenttime % 24000); // one day lasts 24000
-			currenttime += plugin.config.permaOffset;
-			if (isNight) currenttime += nightstart;
-			plugin.getServer().getWorlds().get(0).setTime(currenttime);
-		}
-	}
-	
-	
-	private class voteEnd extends TimerTask{
+    private class voteEnd extends TimerTask{
 		@Override
         public void run(){
 			endVote();
@@ -115,7 +82,7 @@ public class LVTPlayerListener implements Listener {
 				return;
 			}
 			
-			for (Player player : onlinePlayers(currentWorld)) {
+			for (Player player : Utils.onlinePlayers(currentWorld)) {
 				Integer seconds = (plugin.config.voteTime - remindCounter * timeBetween) / 1000;
 				player.sendMessage(
 					ChatColor.GOLD + LightVote.translate.tr("Vote for {what}, {seconds} seconds remaining.")
@@ -128,7 +95,7 @@ public class LVTPlayerListener implements Listener {
 	
 	private void endVote(){
 		plugin.log.sMdebug(plugin, "Starting endvote...");
-		Collection<Player> playerlist = onlinePlayers(currentWorld);
+		Collection<Player> playerlist = Utils.onlinePlayers(currentWorld);
 		plugin.log.sMdebug(plugin, "Endvote: got players...");
 		String msg = "";
 		boolean passed = false;
@@ -152,7 +119,7 @@ public class LVTPlayerListener implements Listener {
 		}
 
 		int onlinePlayers = 0;
-		for (Player player : onlinePlayers(plugin.getServer().getWorld("world_skylands"))) {
+		for (Player player : Utils.onlinePlayers(plugin.getServer().getWorld("world_skylands"))) {
 			if (player.isOnline()) onlinePlayers ++;
 		}
 		if ((dayVote == "day") && (onlinePlayers > 0)) {
@@ -177,7 +144,7 @@ public class LVTPlayerListener implements Listener {
 						plugin.log.sM(plugin, "LVT: Current time was negative!");
 					}
 
-					if (dayVote == "night") currenttime += nightstart;
+					if (dayVote == "night") currenttime += PermanentTime.nightstart;
 					if (plugin.config.perma) currenttime += plugin.config.permaOffset;
 
 					if ((dayVote == "day") || (dayVote == "night")) {
@@ -439,7 +406,7 @@ public class LVTPlayerListener implements Listener {
 		}
 
 		if(sender instanceof Player) voters.add((Player)sender);
-		if (voters.size() == onlinePlayers(currentWorld).size()){// plugin.getServer().getOnlinePlayers().length){
+		if (voters.size() == Utils.onlinePlayers(currentWorld).size()){// plugin.getServer().getOnlinePlayers().length){
 			t.cancel();
 			t = new Timer();
 			reminder.cancel();
@@ -492,7 +459,7 @@ public class LVTPlayerListener implements Listener {
 			return true;
 		}
 		
-		if (isDay(currentWorld.getTime())){ // it is day now
+		if (Utils.isDay(currentWorld.getTime())){ // it is day now
 			if (voteWhat == "day"){
 				sender.sendMessage(ChatColor.GOLD + LightVote.translate.tr("It is already day!"));
 				return true;
@@ -515,7 +482,7 @@ public class LVTPlayerListener implements Listener {
 		voting = true;
 		plugin.log.sMdebug(plugin, "Startvote detected... just before broadcast message.");
 
-		for (Player player : onlinePlayers(currentWorld)) {
+		for (Player player : Utils.onlinePlayers(currentWorld)) {
 			player.sendMessage(
 				ChatColor.GOLD + LightVote.translate.tr("Lightvote {daynight} in world '{world}' started by {player},")
 				.replace("{daynight}", LightVote.translate.tr(daymsg))
@@ -533,7 +500,7 @@ public class LVTPlayerListener implements Listener {
 		//plugin.getServer().broadcastMessage(ChatColor.GOLD + "type /lvt yes, or /lvt no to vote.");
 		
 		t.schedule(new voteEnd(), plugin.config.voteTime);
-		if (voters.size() == onlinePlayers(currentWorld).size()){
+		if (voters.size() == Utils.onlinePlayers(currentWorld).size()){
 			t.cancel();
 			t = new Timer();
 			endVote();
@@ -559,9 +526,9 @@ public class LVTPlayerListener implements Listener {
 			long currenttime = player.getWorld().getTime();
 			//String[] commandArgs = {""};
 			if (!voting) {
-				startVote(isDay(currenttime) ? "night" : "day", player);
+				startVote(Utils.isDay(currenttime) ? "night" : "day", player);
 			} else {
-				addToVote(isDay(currenttime) ? "night" : "day", player, true);
+				addToVote(Utils.isDay(currenttime) ? "night" : "day", player, true);
 			}
 			//player.sendMessage(ChatColor.GOLD + "Sleeping, attempting to vote for day time...");
 			//onPlayerCommand(player, null, String.valueOf("lvt"), commandArgs);
@@ -581,7 +548,7 @@ public class LVTPlayerListener implements Listener {
 				Material itemInHand;
 				Material noVoteItemHits;
 				Material noVoteItemInHand;
-				if (isDay(currenttime)) {
+				if (Utils.isDay(currenttime)) {
 					itemHits = plugin.config.bedVoteItemHitsNight;
 					itemInHand = plugin.config.bedVoteItemInHandNight;				
 					noVoteItemHits = plugin.config.bedVoteNoVoteItemHitsNight;
@@ -600,9 +567,9 @@ public class LVTPlayerListener implements Listener {
 						if (e.getItem().getType() == itemInHand) {
 							plugin.log.sMdebug(plugin, "Bedvote interaction detected... items matched.");
 							if (!voting) {
-								startVote(isDay(currenttime) ? "night" : "day", player);
+								startVote(Utils.isDay(currenttime) ? "night" : "day", player);
 							} else {
-								addToVote(isDay(currenttime) ? "night" : "day", player, true);
+								addToVote(Utils.isDay(currenttime) ? "night" : "day", player, true);
 							}
 						}
 					}
@@ -613,7 +580,7 @@ public class LVTPlayerListener implements Listener {
 							if (voting) {
 								//startVote(!(isDay(currenttime)), player);
 							//} else {
-								addToVote(isDay(currenttime) ? "night" : "day", player, false);
+								addToVote(Utils.isDay(currenttime) ? "night" : "day", player, false);
 							}
 						}
 					}
@@ -622,19 +589,6 @@ public class LVTPlayerListener implements Listener {
 		  }
 		} catch (Exception exception) {
 			System.err.println("LightVote - 'onPlayerInteract' Error: " + exception.getMessage());			  
-		}
-	}
-
-	public Collection<Player> onlinePlayers(World world)
-	{
-		HashMap<String, Player> players = new HashMap<String, Player>();
-		if (world == null) {
-			return players.values();
-		} else {
-			for (Player player : world.getPlayers()) {
-				if (player.isOnline()) players.put(player.getName(), player);
-			}
-			return players.values();
 		}
 	}
 

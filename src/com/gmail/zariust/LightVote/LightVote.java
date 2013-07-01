@@ -21,28 +21,25 @@ import fr.crafter.tickleman.RealPlugin.RealTranslationFile;
  */
 public class LightVote extends JavaPlugin {
     public static Metrics metrics = null;
-	public static RealTranslationFile translate;
-	private LVTPlayerListener playerListener;
+    public static RealTranslationFile translate;
+    private LVTPlayerListener playerListener;
     public Log log;
-	public LVTConfig config;
-	public ConfigManager configManager;
+    public static LVTConfig config;
+    public ConfigManager configManager;
 
     @Override
     public void onEnable() { 
-        registerListeners();
         loadConfig();
         loadLanguageFile();
-
-        if(config.perma)
-            setPermanentTime();
-        
-        if (config.enableMetrics)
-            enableMetrics();
+        registerListeners();
+        setPermanentTimeIfConfigured();
+        enableMetricsIfConfigured();
     }
 
     @Override
     public void onDisable() {
-    	if (playerListener.tReset != null) playerListener.tReset.cancel();
+        if (PermanentTime.timer != null)
+            PermanentTime.timer.cancel();
     }
 
     public void registerListeners() {
@@ -61,23 +58,26 @@ public class LightVote extends JavaPlugin {
         log.sM(this, LightVote.translate.tr("Language is " + config.language));
     }
 
-    public void setPermanentTime() {
-        playerListener.setReset();
+    public void setPermanentTimeIfConfigured() {
+        if (config.perma)
+            PermanentTime.setReset();
     }
 
-    public void enableMetrics() {
-        try {
-            metrics = new Metrics(this);
-            metrics.start();
-        } catch (IOException e) {
-            // Failed to submit the stats :-(
+    public void enableMetricsIfConfigured() {
+        if (config.enableMetrics) {
+            try {
+                metrics = new Metrics(this);
+                metrics.start();
+            } catch (IOException e) {
+                // Failed to submit the stats :-(
+            }
         }
     }
 
     @Override
     public boolean onCommand(CommandSender sender, Command command,
-    		String label, String[] args) {
+            String label, String[] args) {
 
-    	return playerListener.onPlayerCommand(sender, command, label, args);
+        return playerListener.onPlayerCommand(sender, command, label, args);
     }
 }
