@@ -36,9 +36,8 @@ public class LVTPlayerListener implements Listener {
 	private static final int nightstart = 14000;
 	//private Set<String> canStartVotes = null;
     
-    public LVTPlayerListener(LightVote instance, Logger log) {
+    public LVTPlayerListener(LightVote instance) {
         plugin = instance;
-        //this.log = log;
     }
 	
     
