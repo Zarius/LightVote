@@ -77,7 +77,7 @@ public class ConfigV1 {
         
         File configFile = new File(folder.getAbsolutePath() + File.separator +"LightVote.conf");
         if (configFile.exists()){
-            lightVote.sM("Scanning properties file.");
+            lightVote.log.sM(lightVote, "Scanning properties file.");
             Scanner sc = null;
             try {
                 sc = new Scanner(configFile);
@@ -86,7 +86,7 @@ public class ConfigV1 {
                 e.printStackTrace();
             }
         }else{
-            lightVote.sM("Creating properties file.");
+            lightVote.log.sM(lightVote, "Creating properties file.");
             BufferedWriter out = null;
             try {
                 configFile.createNewFile();
@@ -97,7 +97,7 @@ public class ConfigV1 {
                 e.printStackTrace();
             }
         }
-        lightVote.sM("Properties loaded.  Debug messages: " +lightVote.config.debugMessages);
+        lightVote.log.sM(lightVote, "Properties loaded.  Debug messages: " +lightVote.config.debugMessages);
         
         voteStartersFile = new File(folder.getAbsolutePath() + File.separator +"voteStarters.conf");
         if(voteStartersFile.exists()){

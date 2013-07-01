@@ -127,9 +127,9 @@ public class LVTPlayerListener implements Listener {
 	}	
 	
 	private void endVote(){
-		plugin.sMdebug("Starting endvote...");
+		plugin.log.sMdebug(plugin, "Starting endvote...");
 		Collection<Player> playerlist = onlinePlayers(currentWorld);
-		plugin.sMdebug("Endvote: got players...");
+		plugin.log.sMdebug(plugin, "Endvote: got players...");
 		String msg = "";
 		boolean passed = false;
 
@@ -174,7 +174,7 @@ public class LVTPlayerListener implements Listener {
 
 					if (currenttime < 0){
 						currenttime *= -1;
-						plugin.sM("LVT: Current time was negative!");
+						plugin.log.sM(plugin, "LVT: Current time was negative!");
 					}
 
 					if (dayVote == "night") currenttime += nightstart;
@@ -189,25 +189,25 @@ public class LVTPlayerListener implements Listener {
 						}
 					}
 					passed = true;
-					plugin.sM("LVT: changed time to "+ (dayVote));
+					plugin.log.sM(plugin, "LVT: changed time to "+ (dayVote));
 				}
 				else {
 					Integer disagrees = voters.size() - agrees;
 					msg = LightVote.translate.tr("Vote failed. ({agrees} yes, {disagrees} no)")
 					.replace("{agrees}", agrees.toString())
 					.replace("{disagrees}", disagrees.toString());
-					plugin.sM("LVT: vote failed (" + voters.size() + " votes, "+ agrees + " agree)");
+					plugin.log.sM(plugin, "LVT: vote failed (" + voters.size() + " votes, "+ agrees + " agree)");
 				}
 			}else{
 				Double numReqYesVotes = Math.ceil(numplayers * reqYesVotes * 100) / 100;
 				msg = LightVote.translate.tr("Vote failed, insufficient \"yes\" votes. ({agrees}/{required})")
 				.replace("{agrees}", agrees.toString())
 				.replace("{required}", numReqYesVotes.toString());
-				plugin.sM("LVT: vote failed, insufficient votes (" + agrees + " yes votes, "+ numplayers + " players, req " + (numplayers * reqYesVotes)+ ")");
+				plugin.log.sM(plugin, "LVT: vote failed, insufficient votes (" + agrees + " yes votes, "+ numplayers + " players, req " + (numplayers * reqYesVotes)+ ")");
 			}
 		}
 		
-		plugin.sMdebug("Endvote: checked status, broadcasting message...");
+		plugin.log.sMdebug(plugin, "Endvote: checked status, broadcasting message...");
 
 		for (Player player : playerlist) {
 			player.sendMessage(ChatColor.GOLD + msg);
@@ -249,7 +249,7 @@ public class LVTPlayerListener implements Listener {
 			player = (Player) sender;
 			currentWorld = player.getWorld();
 		} else {
-			plugin.sM("onPlayerCommand - sender is not a player, skipping commands.");
+			plugin.log.sM(plugin, "onPlayerCommand - sender is not a player, skipping commands.");
 			return false;
 		}
 		String[] split = args;
@@ -400,7 +400,7 @@ public class LVTPlayerListener implements Listener {
 				|| split[0].equalsIgnoreCase(LightVote.translate.tr("no"))
 				|| split[0].equalsIgnoreCase(LightVote.translate.tr("n"))
 			) {
-				plugin.sMdebug("Starting no vote...");
+				plugin.log.sMdebug(plugin, "Starting no vote...");
 				addToVote(this.dayVote, sender, false);
 			}
 		}
@@ -513,7 +513,7 @@ public class LVTPlayerListener implements Listener {
 		this.dayVote = voteWhat;
 
 		voting = true;
-		plugin.sMdebug("Startvote detected... just before broadcast message.");
+		plugin.log.sMdebug(plugin, "Startvote detected... just before broadcast message.");
 
 		for (Player player : onlinePlayers(currentWorld)) {
 			player.sendMessage(
@@ -593,12 +593,12 @@ public class LVTPlayerListener implements Listener {
 					noVoteItemInHand = plugin.config.bedVoteNoVoteItemInHandNight;				
 				}
 
-				plugin.sMdebug("Bedvote interaction detected... items loaded. itemHits: "+itemHits+" NoVoteItemHits: "+noVoteItemHits.name()+" itemhit: "+e.getClickedBlock().getType().name());
+				plugin.log.sMdebug(plugin, "Bedvote interaction detected... items loaded. itemHits: "+itemHits+" NoVoteItemHits: "+noVoteItemHits.name()+" itemhit: "+e.getClickedBlock().getType().name());
 
 				if (e.getClickedBlock().getType() == itemHits) {
 					if (e.getItem() != null) {
 						if (e.getItem().getType() == itemInHand) {
-							plugin.sMdebug("Bedvote interaction detected... items matched.");
+							plugin.log.sMdebug(plugin, "Bedvote interaction detected... items matched.");
 							if (!voting) {
 								startVote(isDay(currenttime) ? "night" : "day", player);
 							} else {
@@ -608,7 +608,7 @@ public class LVTPlayerListener implements Listener {
 					}
 				} else if (e.getClickedBlock().getType() == noVoteItemHits) {
 					if (e.getItem() != null) {
-						plugin.sMdebug("Bedvote interaction detected 'novote'... item held: "+e.getItem().getType().name()+" item needed: "+noVoteItemInHand.name());
+						plugin.log.sMdebug(plugin, "Bedvote interaction detected 'novote'... item held: "+e.getItem().getType().name()+" item needed: "+noVoteItemInHand.name());
 						if (e.getItem().getType() == noVoteItemInHand) {
 							if (voting) {
 								//startVote(!(isDay(currenttime)), player);
