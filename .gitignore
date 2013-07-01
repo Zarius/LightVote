@@ -13,3 +13,10 @@ Thumbs.db
 +build/*
 +manifest.mf
 +nbproject
+
+# Lightvote specific files
+.pmd
+LightVote.jar
+builds/*
+dependencies/*
+lib/bukkit.jar
